@@ -1,0 +1,32 @@
+name: Run IRON-FRONT 0.16 Source Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/run-source-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated Godot port branch
+        uses: actions/checkout@v4
+        with:
+          ref: godot-port
+      - name: Extract and inspect 0.16 source
+        run: |
+          mkdir -p /tmp/iron-front-web source-audit
+          unzip -q reference/IRON-FRONT-0.16-MORE-MINES-SOURCE.zip -d /tmp/iron-front-web
+          python3 scripts/audit_web_reference.py /tmp/iron-front-web source-audit
+      - name: Upload source audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: IRON-FRONT-0.16-SOURCE-AUDIT
+          path: source-audit/
+          if-no-files-found: error
+          retention-days: 30
