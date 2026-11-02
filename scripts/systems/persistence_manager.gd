@@ -20,6 +20,7 @@ func _ready() -> void:
 func save_game() -> void:
 	var config := ConfigFile.new()
 	config.set_value("economy","resources",economy.resources)
+	config.set_value("economy","secured_mines",economy.secured_mines)
 	config.set_value("buildings","placed",building_manager.get_save_data())
 	config.set_value("units","army",unit_manager.get_save_data())
 	config.set_value("rally","active",unit_manager.rally_active)
@@ -35,14 +36,20 @@ func load_game() -> void:
 		return
 	var resources_value: Variant = config.get_value("economy","resources",economy.resources)
 	if resources_value is Dictionary:
-		economy.resources = resources_value
+		economy.resources = resources_value.duplicate(true)
 		economy.resources_changed.emit(economy.resources.duplicate(true))
+	var secured_mines_value: Variant = config.get_value("economy","secured_mines",{})
+	if secured_mines_value is Dictionary:
+		economy.secured_mines = secured_mines_value.duplicate(true)
+	else:
+		economy.secured_mines = {}
 	var buildings_value: Variant = config.get_value("buildings","placed",[])
 	if buildings_value is Array:
 		building_manager.load_save_data(buildings_value)
 	var units_value: Variant = config.get_value("units","army",[])
 	if units_value is Array:
 		unit_manager.load_save_data(units_value)
+	unit_manager.cancel_rally_point()
 	if bool(config.get_value("rally","active",false)):
 		var rally_value: Variant = config.get_value("rally","position",Vector3.ZERO)
 		if rally_value is Vector3:
