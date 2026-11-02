@@ -4,6 +4,7 @@ extends Node3D
 const GRID_SIZE: float = 2.0
 const SAFETY_GAP: float = 3.0
 const BUILDING_SIZE := Vector2(10.0, 9.0)
+const MAX_BUILDINGS_PER_TYPE: Dictionary = {"barracks": 1, "factory": 1}
 const PLAYER_MIN_X: float = -78.0
 const PLAYER_MAX_X: float = -10.0
 const MAP_MIN_Z: float = -37.0
@@ -96,10 +97,27 @@ func _create_preview() -> void:
 	preview.visible = false
 	add_child(preview)
 
-func begin_placement(building_type: String) -> void:
+func can_build(building_type: String) -> bool:
+	var maximum: int = int(MAX_BUILDINGS_PER_TYPE.get(building_type, 1))
+	var count := 0
+	for record in placed_buildings:
+		if str(record.get("type", "")) == building_type:
+			count += 1
+	return count < maximum
+
+func building_limit_message(building_type: String) -> String:
+	match building_type:
+		"barracks": return "لا يمكنك بناء أكثر من ثكنة واحدة. الثكنة الحالية موجودة بالفعل."
+		"factory": return "لا يمكنك بناء أكثر من مصنع مركبات واحد. المصنع الحالي موجود بالفعل."
+	return "وصلت إلى الحد الأقصى لهذا النوع من المباني."
+
+func begin_placement(building_type: String) -> bool:
+	if not can_build(building_type):
+		return false
 	active_type = building_type
 	preview.visible = true
 	_set_preview_valid(false)
+	return true
 
 func cancel_placement() -> void:
 	active_type = ""
@@ -137,6 +155,10 @@ func _find_nearest_build_slot(world_position: Vector2) -> Variant:
 func confirm_placement(screen_position: Vector2) -> String:
 	if active_type.is_empty():
 		return ""
+	if not can_build(active_type):
+		var limit_message := building_limit_message(active_type)
+		cancel_placement()
+		return limit_message
 	update_preview(screen_position)
 	if not current_valid:
 		return "الموقع غير صالح. المس إحدى ساحات البناء الأربع المحددة."
@@ -248,9 +270,14 @@ func load_save_data(data: Array) -> void:
 	var base_count: int = 12
 	while occupied.size() > base_count:
 		occupied.pop_back()
+	var restored_counts: Dictionary = {}
 	for record in data:
 		if record is Dictionary:
 			var center_value: Variant = record.get("center", Vector2.ZERO)
 			if center_value is Vector2:
 				var kind: String = str(record.get("type", "barracks"))
-				_create_building(kind, center_value)
+				var maximum: int = int(MAX_BUILDINGS_PER_TYPE.get(kind, 1))
+				var restored: int = int(restored_counts.get(kind, 0))
+				if restored < maximum:
+					_create_building(kind, center_value)
+					restored_counts[kind] = restored + 1
