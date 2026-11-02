@@ -13,6 +13,10 @@ var selected_all := false
 var next_unit_id := 1
 var movement_id := 0
 var pending_arrivals := 0
+var rally_active := false
+var rally_position := Vector3.ZERO
+var rally_sequence := 0
+var rally_marker: Node3D
 
 func _ready() -> void:
 	for index in range(5):
@@ -76,9 +80,80 @@ func _create_unit(world_position: Vector3, vehicle: bool) -> void:
 
 func spawn_infantry() -> void:
 	_create_unit(Vector3(-46.0, 0.0, 12.0), false)
+	_dispatch_reinforcement_to_rally(units[units.size() - 1])
 
 func spawn_vehicle() -> void:
 	_create_unit(Vector3(-40.0, 0.0, -13.0), true)
+	_dispatch_reinforcement_to_rally(units[units.size() - 1])
+
+func set_rally_point(world_position: Vector3) -> void:
+	rally_position = Vector3(
+		clampf(world_position.x, PLAYER_MIN_X, PLAYER_MAX_X),
+		0.0,
+		clampf(world_position.z, MAP_MIN_Z, MAP_MAX_Z)
+	)
+	rally_active = true
+	if rally_marker == null:
+		_create_rally_marker()
+	rally_marker.position = rally_position
+	rally_marker.visible = true
+
+func cancel_rally_point() -> void:
+	rally_active = false
+	if rally_marker != null:
+		rally_marker.visible = false
+
+func _create_rally_marker() -> void:
+	rally_marker = Node3D.new()
+	rally_marker.name = "RallyPointMarker"
+	var ground_ring := MeshInstance3D.new()
+	var ring_mesh := CylinderMesh.new()
+	ring_mesh.top_radius = 2.0
+	ring_mesh.bottom_radius = 2.0
+	ring_mesh.height = 0.10
+	ring_mesh.radial_segments = 32
+	ground_ring.mesh = ring_mesh
+	ground_ring.position.y = 0.08
+	var ring_material := StandardMaterial3D.new()
+	ring_material.albedo_color = Color(1.0, 0.66, 0.12, 0.92)
+	ring_material.emission_enabled = true
+	ring_material.emission = Color(0.8, 0.32, 0.04)
+	ground_ring.material_override = ring_material
+	rally_marker.add_child(ground_ring)
+	var pole := MeshInstance3D.new()
+	var pole_mesh := CylinderMesh.new()
+	pole_mesh.top_radius = 0.08
+	pole_mesh.bottom_radius = 0.08
+	pole_mesh.height = 3.2
+	pole.mesh = pole_mesh
+	pole.position = Vector3(0.0, 1.7, 0.0)
+	pole.material_override = ring_material
+	rally_marker.add_child(pole)
+	var flag := MeshInstance3D.new()
+	var flag_mesh := BoxMesh.new()
+	flag_mesh.size = Vector3(1.25, 0.72, 0.08)
+	flag.mesh = flag_mesh
+	flag.position = Vector3(0.62, 2.85, 0.0)
+	flag.material_override = ring_material
+	rally_marker.add_child(flag)
+	add_child(rally_marker)
+
+func _dispatch_reinforcement_to_rally(unit: Node3D) -> void:
+	if not rally_active or not is_instance_valid(unit):
+		return
+	rally_sequence += 1
+	var index: int = rally_sequence - 1
+	var col: int = index % 5
+	var row: int = int(index / 5)
+	var offset := Vector3(float(col - 2) * 2.4, 0.0, float(row) * 2.4)
+	var target := Vector3(
+		clampf(rally_position.x + offset.x, PLAYER_MIN_X, PLAYER_MAX_X),
+		0.0,
+		clampf(rally_position.z + offset.z, MAP_MIN_Z, MAP_MAX_Z)
+	)
+	var duration: float = maxf(unit.position.distance_to(target) / MOVE_SPEED, 0.5)
+	var tween := create_tween()
+	tween.tween_property(unit, "position", target, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func toggle_select_all() -> int:
 	if selected_all:
