@@ -1,6 +1,7 @@
 extends SceneTree
 
 const EconomyManagerScript = preload("res://scripts/systems/economy_manager.gd")
+const BuildingPlacementManagerScript = preload("res://scripts/systems/building_placement_manager.gd")
 
 func _initialize() -> void:
 	call_deferred("_run_tests")
@@ -53,6 +54,22 @@ func _run_tests() -> void:
 	assert(int(economy.resources["wood"]) == before_payment - 120, "Barracks payment must deduct the exact wood cost.")
 	assert(not economy.pay_building_cost("unknown_building"), "Unknown buildings must not be charged.")
 
-	print("IRON-FRONT economy tests: PASS")
-	print("Mine collection is one-time, enemy/invalid mines are rejected, and building costs are exact.")
+	var building_manager := BuildingPlacementManagerScript.new()
+	building_manager.configure(null, economy, [])
+	root.add_child(building_manager)
+	await process_frame
+	assert(building_manager.can_build("barracks"), "A barracks should be buildable before one exists.")
+	building_manager._create_building("barracks", Vector2(-60.0, -4.0))
+	assert(not building_manager.can_build("barracks"), "A normal building type must be limited to one instance.")
+
+	for index in range(4):
+		building_manager._create_building("watchtower", Vector2(-60.0 + float(index) * 3.0, 12.0))
+	assert(not building_manager.can_build("watchtower"), "Watchtowers must stop at the configured limit of four.")
+
+	for index in range(10):
+		building_manager._create_building("wall", Vector2(-70.0 + float(index) * 2.0, 18.0))
+	assert(not building_manager.can_build("wall"), "Defensive walls must stop at the configured limit of ten.")
+
+	print("IRON-FRONT regression tests: PASS")
+	print("Verified one-time mine rewards, ownership/resource validation, exact building costs, and building-type limits.")
 	quit(0)
