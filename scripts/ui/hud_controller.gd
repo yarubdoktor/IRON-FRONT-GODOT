@@ -159,6 +159,12 @@ func set_rally_mode(active: bool, rally_exists: bool) -> void:
 	cancel_rally_button.visible = active or rally_exists
 	cancel_rally_button.text = "إلغاء التحديد" if active else "إلغاء التجمع"
 
+func set_building_availability(barracks_available: bool, factory_available: bool) -> void:
+	build_barracks_button.disabled = not barracks_available
+	build_barracks_button.text = "بناء ثكنة جديدة" if barracks_available else "الثكنة مبنية بالفعل (الحد 1)"
+	build_factory_button.disabled = not factory_available
+	build_factory_button.text = "بناء مصنع مركبات" if factory_available else "المصنع مبني بالفعل (الحد 1)"
+
 func show_building(data: Dictionary) -> void:
 	building_data = data.duplicate(true)
 	var content := building_panel.get_child(0) as VBoxContainer
