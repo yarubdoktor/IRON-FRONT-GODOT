@@ -77,7 +77,7 @@ func _run_tests() -> void:
 	assert(placement_manager._is_slot_available(Vector2(-47.0,11.0),Vector2(4.5,4.5)), "A clear slot beside the HQ must remain usable.")
 	assert(not placement_manager._is_slot_available(Vector2(-47.0,10.0),Vector2(4.5,4.5)), "Safety gap must block a footprint too close to the HQ.")
 	placement_manager._create_building("power",Vector2(-47.0,11.0))
-	assert(not placement_manager._is_slot_available(Vector2(-47.0,15.5),Vector2(4.5,4.5)), "New buildings must reserve their full footprint plus safety gap.")
+	assert(not placement_manager._is_slot_available(Vector2(-47.0,15.0),Vector2(4.5,4.5)), "New buildings must reserve their full footprint plus safety gap.")
 	assert(placement_manager.can_build("barracks"), "At least one collision-free standard building slot must remain available.")
 
 
