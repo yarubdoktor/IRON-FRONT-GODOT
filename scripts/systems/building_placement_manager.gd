@@ -24,19 +24,19 @@ const WALL_SLOTS: Array[Vector2] = [
 	Vector2(-67.0, 6.0), Vector2(-44.0, -5.0), Vector2(-44.0, 6.0)
 ]
 const BUILDING_CATALOG: Dictionary = {
-	"barracks": {"title":"الثكنة العسكرية","description":"تدريب المشاة والقناصة والمهندسين.","size":Vector2(3.7,3.2),"model":"res://assets/3d/base/squad-tent.glb","fit":Vector3(3.7,2.2,3.2)},
-	"power": {"title":"محطة الطاقة","description":"توليد الطاقة اللازمة لتشغيل منشآت القاعدة.","size":Vector2(2.8,2.5),"model":"res://assets/3d/base/generator-trailer.glb","fit":Vector3(2.8,2.0,2.5)},
-	"refinery": {"title":"مصفاة الوقود","description":"معالجة الوقود وتجهيز احتياطي الإمداد.","size":Vector2(4.2,3.8),"model":"res://assets/3d/base/fuel-dump-berm.glb","fit":Vector3(4.2,2.4,3.8)},
-	"factory": {"title":"مصنع الدبابات","description":"منشأة إنتاج الدبابات القتالية الثقيلة.","size":Vector2(4.0,4.0),"model":"res://assets/3d/base/camo-net-frame.glb","fit":Vector3(4.0,2.7,4.0),"decoration":"res://assets/3d/vehicles/main-battle-tank.glb"},
-	"research": {"title":"مركز الأبحاث","description":"تطوير التقنيات العسكرية وتحسين كفاءة القوات.","size":Vector2(3.6,3.2),"model":"res://assets/3d/base/radar-trailer.glb","fit":Vector3(3.6,2.7,3.2)},
-	"watchtower": {"title":"برج المراقبة","description":"نقطة مراقبة مرتفعة لرصد محيط القاعدة.","size":Vector2(2.0,2.0),"model":"res://assets/3d/base/guard-tower.glb","fit":Vector3(2.0,4.2,2.0)},
-	"hospital": {"title":"المستشفى الميداني","description":"منشأة طبية لدعم القوات المتضررة.","size":Vector2(4.0,3.8),"model":"res://assets/3d/base/field-hospital-tent.glb","fit":Vector3(4.0,2.5,3.8)},
-	"ammo": {"title":"مستودع الذخيرة","description":"تخزين وتجهيز ذخائر العمليات العسكرية.","size":Vector2(3.3,2.8),"model":"res://assets/3d/base/storage-container.glb","fit":Vector3(3.3,2.5,2.8)},
-	"vehicle_factory": {"title":"مصنع المركبات","description":"إنتاج مركبات الاستطلاع والدعم والمدفعية المتحركة.","size":Vector2(3.6,3.2),"model":"res://assets/3d/base/field-office.glb","fit":Vector3(3.6,2.6,3.2),"decoration":"res://assets/3d/vehicles/armoured-car.glb"},
-	"airfield": {"title":"المطار العسكري","description":"مهبط جوي وتجهيز منشآت الطيران والاستطلاع.","size":Vector2(4.5,4.5),"model":"res://assets/3d/base/helipad-marker.glb","fit":Vector3(4.5,0.45,4.5)},
-	"missile": {"title":"دفاع الصواريخ","description":"منظومة دفاع جوي لحماية المجال المحيط بالقاعدة.","size":Vector2(3.9,3.0),"model":"res://assets/3d/base/mobile-rocket-launcher.glb","fit":Vector3(3.9,2.2,3.0)},
-	"wall": {"title":"حاجز دفاعي","description":"قطعة تحصين قابلة للتدمير تسد ممرات الاقتحام.","size":Vector2(3.0,0.9),"model":"res://assets/3d/base/sandbag-wall-straight.glb","fit":Vector3(3.0,1.35,0.9)},
-	"command": {"title":"مركز القيادة المتقدم","description":"مركز دعم يوسّع قدرات إدارة القاعدة.","size":Vector2(3.8,3.2),"model":"res://assets/3d/base/command-vehicle.glb","fit":Vector3(3.8,2.8,3.2)}
+	"barracks": {"title":"الثكنة العسكرية","description":"تدريب المشاة والقناصة والمهندسين.","size":Vector2(3.7,3.2)},
+	"power": {"title":"محطة الطاقة","description":"توليد الطاقة اللازمة لتشغيل منشآت القاعدة.","size":Vector2(2.8,2.5)},
+	"refinery": {"title":"مصفاة الوقود","description":"معالجة الوقود وتجهيز احتياطي الإمداد.","size":Vector2(4.2,3.8)},
+	"factory": {"title":"مصنع الدبابات","description":"منشأة إنتاج الدبابات القتالية الثقيلة.","size":Vector2(4.0,4.0)},
+	"research": {"title":"مركز الأبحاث","description":"تطوير التقنيات العسكرية وتحسين كفاءة القوات.","size":Vector2(3.6,3.2)},
+	"watchtower": {"title":"برج المراقبة","description":"نقطة مراقبة مرتفعة لرصد محيط القاعدة.","size":Vector2(2.0,2.0)},
+	"hospital": {"title":"المستشفى الميداني","description":"منشأة طبية لدعم القوات المتضررة.","size":Vector2(4.0,3.8)},
+	"ammo": {"title":"مستودع الذخيرة","description":"تخزين وتجهيز ذخائر العمليات العسكرية.","size":Vector2(3.3,2.8)},
+	"vehicle_factory": {"title":"مصنع المركبات","description":"إنتاج مركبات الاستطلاع والدعم والمدفعية المتحركة.","size":Vector2(3.6,3.2)},
+	"airfield": {"title":"المطار العسكري","description":"مهبط جوي وتجهيز منشآت الطيران والاستطلاع.","size":Vector2(4.5,4.5)},
+	"missile": {"title":"دفاع الصواريخ","description":"منظومة دفاع جوي لحماية المجال المحيط بالقاعدة.","size":Vector2(3.9,3.0)},
+	"wall": {"title":"حاجز دفاعي","description":"قطعة تحصين قابلة للتدمير تسد ممرات الاقتحام.","size":Vector2(3.0,0.9)},
+	"command": {"title":"مركز القيادة المتقدم","description":"مركز دعم يوسّع قدرات إدارة القاعدة.","size":Vector2(3.8,3.2)}
 }
 const MAX_BUILDINGS_PER_TYPE: Dictionary = {"watchtower":4,"wall":10}
 
@@ -293,14 +293,7 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	pad_material.albedo_color = Color(0.27,0.29,0.24) if not is_wall else Color(0.25,0.24,0.20)
 	pad.material_override = pad_material
 	node.add_child(pad)
-	var model_path: String = str(spec.get("model",""))
-	_add_fitted_model(node,model_path,spec.get("fit",Vector3(3.5,2.5,3.0)))
-	var decoration_path: String = str(spec.get("decoration",""))
-	if not decoration_path.is_empty():
-		var decoration := Node3D.new()
-		decoration.position = Vector3(1.25,0.0,1.2)
-		node.add_child(decoration)
-		_add_fitted_model(decoration,decoration_path,Vector3(1.8,1.5,2.2))
+	_add_placeholder_structure(node,building_type,size)
 	var area := Area3D.new()
 	area.name = "BuildingClickArea"
 	area.position.y = 1.4
@@ -318,43 +311,74 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	placed_buildings.append({"type":building_type,"center":center,"rotation":rotation_degrees})
 	occupied.append({"center":center,"size":size,"label":building_type})
 
-func _add_fitted_model(parent: Node3D,resource_path: String,max_size: Vector3) -> void:
-	if resource_path.is_empty() or not ResourceLoader.exists(resource_path):
+func _add_placeholder_structure(parent: Node3D, building_type: String, footprint: Vector2) -> void:
+	# Temporary gameplay proxy. Final high-detail GLB assets are added after core systems are complete.
+	var material := StandardMaterial3D.new()
+	material.roughness = 0.88
+	var color := Color(0.34, 0.39, 0.31)
+	var height := 3.2
+	match building_type:
+		"barracks":
+			color = Color(0.38, 0.42, 0.31)
+			height = 2.8
+		"factory":
+			color = Color(0.42, 0.43, 0.38)
+			height = 4.2
+		"vehicle_factory":
+			color = Color(0.37, 0.41, 0.36)
+			height = 3.8
+		"research":
+			color = Color(0.34, 0.43, 0.47)
+			height = 3.6
+		"hospital":
+			color = Color(0.62, 0.64, 0.56)
+			height = 2.9
+		"power":
+			color = Color(0.43, 0.46, 0.39)
+			height = 3.0
+		"refinery":
+			color = Color(0.45, 0.39, 0.31)
+			height = 3.3
+		"ammo":
+			color = Color(0.39, 0.40, 0.35)
+			height = 2.8
+		"command":
+			color = Color(0.45, 0.43, 0.34)
+			height = 3.5
+		"missile":
+			color = Color(0.35, 0.42, 0.34)
+			height = 3.1
+		"watchtower":
+			color = Color(0.38, 0.39, 0.33)
+			height = 6.0
+		"airfield":
+			color = Color(0.31, 0.34, 0.29)
+			height = 0.16
+		"wall":
+			color = Color(0.35, 0.32, 0.27)
+			height = 1.25
+	material.albedo_color = color
+	var body := MeshInstance3D.new()
+	body.name = "TemporaryStructure"
+	var body_mesh := BoxMesh.new()
+	body_mesh.size = Vector3(footprint.x * 0.78, height, footprint.y * 0.78)
+	body.mesh = body_mesh
+	body.position.y = 0.18 + height * 0.5
+	body.material_override = material
+	parent.add_child(body)
+	if building_type == "airfield":
 		return
-	var packed: PackedScene = load(resource_path) as PackedScene
-	if packed == null:
-		return
-	var instance: Node3D = packed.instantiate() as Node3D
-	if instance == null:
-		return
-	parent.add_child(instance)
-	var combined := AABB()
-	var has_bounds := false
-	var visuals: Array[Node] = []
-	_collect_visuals(instance,visuals)
-	for visual_node in visuals:
-		var visual := visual_node as VisualInstance3D
-		if visual == null:
-			continue
-		var relative: Transform3D = instance.global_transform.affine_inverse() * visual.global_transform
-		var transformed: AABB = relative * visual.get_aabb()
-		if not has_bounds:
-			combined = transformed
-			has_bounds = true
-		else:
-			combined = combined.merge(transformed)
-	if not has_bounds:
-		return
-	var dimensions: Vector3 = combined.size
-	var fit: float = minf(max_size.x/maxf(dimensions.x,0.001),minf(max_size.y/maxf(dimensions.y,0.001),max_size.z/maxf(dimensions.z,0.001)))
-	instance.scale = Vector3.ONE * fit
-	instance.position = Vector3(-combined.get_center().x*fit,-combined.position.y*fit,-combined.get_center().z*fit)
-
-func _collect_visuals(root: Node,output: Array[Node]) -> void:
-	for child in root.get_children():
-		if child is VisualInstance3D:
-			output.append(child)
-		_collect_visuals(child,output)
+	var roof := MeshInstance3D.new()
+	roof.name = "TemporaryRoof"
+	var roof_mesh := BoxMesh.new()
+	roof_mesh.size = Vector3(footprint.x * 0.88, 0.22, footprint.y * 0.88)
+	roof.mesh = roof_mesh
+	roof.position.y = 0.18 + height + 0.11
+	var roof_material := StandardMaterial3D.new()
+	roof_material.albedo_color = color.darkened(0.28)
+	roof_material.roughness = 0.9
+	roof.material_override = roof_material
+	parent.add_child(roof)
 
 func get_save_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
