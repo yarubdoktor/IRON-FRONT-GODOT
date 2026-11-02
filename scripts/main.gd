@@ -10,7 +10,7 @@ const HUDControllerScript = preload("res://scripts/ui/hud_controller.gd")
 const InteractionControllerScript = preload("res://scripts/systems/interaction_controller.gd")
 
 func _ready() -> void:
-	var battlefield := BattlefieldBuilderScript.new()
+	var battlefield: Node3D = BattlefieldBuilderScript.new() as Node3D
 	battlefield.name = "Battlefield"
 	add_child(battlefield)
 	var camera_controller := CameraControllerScript.new()
