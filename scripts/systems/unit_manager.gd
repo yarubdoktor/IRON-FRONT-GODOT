@@ -1,10 +1,18 @@
 class_name UnitManager
 extends Node3D
 
+const PLAYER_MIN_X: float = -77.0
+const PLAYER_MAX_X: float = -9.0
+const MAP_MIN_Z: float = -36.0
+const MAP_MAX_Z: float = 36.0
+const MOVE_SPEED: float = 4.0
+
 var units: Array[Node3D] = []
 var selected_units: Array[Node3D] = []
 var selected_all := false
 var next_unit_id := 1
+var movement_id := 0
+var pending_arrivals := 0
 
 func _ready() -> void:
 	for index in range(5):
@@ -63,7 +71,6 @@ func _create_unit(world_position: Vector3, vehicle: bool) -> void:
 	click_shape.shape = capsule
 	click_area.add_child(click_shape)
 	unit.add_child(click_area)
-
 	add_child(unit)
 	units.append(unit)
 
@@ -113,17 +120,41 @@ func _set_marker_visible(unit: Node3D, is_visible: bool) -> void:
 func move_selected_to(destination: Vector3) -> void:
 	if selected_units.is_empty():
 		return
-	var selected_count: int = selected_units.size()
-	for index in range(selected_count):
-		var unit: Node3D = selected_units[index]
+	movement_id += 1
+	var this_movement: int = movement_id
+	var moving_units: Array[Node3D] = selected_units.duplicate()
+	pending_arrivals = 0
+	var count: int = moving_units.size()
+	for index in range(count):
+		var unit: Node3D = moving_units[index]
 		if not is_instance_valid(unit):
 			continue
 		var row: int = int(index / 3)
 		var col: int = index % 3
 		var offset := Vector3(float(col - 1) * 2.2, 0.0, float(row) * 2.2)
-		var target: Vector3 = destination + offset
+		var raw_target: Vector3 = destination + offset
+		var target := Vector3(
+			clampf(raw_target.x, PLAYER_MIN_X, PLAYER_MAX_X),
+			0.0,
+			clampf(raw_target.z, MAP_MIN_Z, MAP_MAX_Z)
+		)
+		var distance: float = unit.position.distance_to(target)
+		if distance < 0.15:
+			continue
+		var duration: float = maxf(distance / MOVE_SPEED, 0.35)
+		pending_arrivals += 1
 		var tween := create_tween()
-		tween.tween_property(unit, "position", target, 1.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(unit, "position", target, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.finished.connect(_on_unit_arrived.bind(this_movement))
+	if pending_arrivals == 0:
+		clear_selection()
+
+func _on_unit_arrived(this_movement: int) -> void:
+	if this_movement != movement_id:
+		return
+	pending_arrivals = maxi(pending_arrivals - 1, 0)
+	if pending_arrivals == 0:
+		clear_selection()
 
 func get_save_data() -> Array[Dictionary]:
 	var data: Array[Dictionary] = []
