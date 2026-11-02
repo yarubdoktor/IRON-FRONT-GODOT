@@ -8,6 +8,8 @@ signal placement_requested(building_type: String)
 signal cancel_placement_requested
 signal save_requested
 signal load_requested
+signal rally_point_requested
+signal cancel_rally_requested
 
 var building_data: Dictionary = {}
 var action_button: Button
@@ -19,6 +21,8 @@ var build_factory_button: Button
 var select_button: Button
 var clear_selection_button: Button
 var cancel_build_button: Button
+var rally_button: Button
+var cancel_rally_button: Button
 
 func _ready() -> void:
 	_build_interface()
@@ -47,20 +51,13 @@ func _build_interface() -> void:
 	var controls := HBoxContainer.new()
 	controls.anchor_left = 1.0
 	controls.anchor_right = 1.0
-	controls.offset_left = -650.0
+	controls.offset_left = -590.0
 	controls.offset_right = -10.0
 	controls.offset_top = 9.0
 	controls.offset_bottom = 57.0
 	controls.alignment = BoxContainer.ALIGNMENT_END
 	controls.add_theme_constant_override("separation", 6)
 	top.add_child(controls)
-
-	var save_button := _make_top_button("حفظ", 64.0)
-	save_button.pressed.connect(func(): save_requested.emit())
-	controls.add_child(save_button)
-	var load_button := _make_top_button("تحميل", 68.0)
-	load_button.pressed.connect(func(): load_requested.emit())
-	controls.add_child(load_button)
 
 	cancel_build_button = _make_top_button("إلغاء البناء", 108.0)
 	cancel_build_button.visible = false
@@ -74,6 +71,15 @@ func _build_interface() -> void:
 	clear_selection_button = _make_top_button("إلغاء التحديد", 112.0)
 	clear_selection_button.pressed.connect(func(): clear_selection_requested.emit())
 	controls.add_child(clear_selection_button)
+
+	rally_button = _make_top_button("نقطة التجمع", 112.0)
+	rally_button.pressed.connect(func(): rally_point_requested.emit())
+	controls.add_child(rally_button)
+
+	cancel_rally_button = _make_top_button("إلغاء التجمع", 112.0)
+	cancel_rally_button.visible = false
+	cancel_rally_button.pressed.connect(func(): cancel_rally_requested.emit())
+	controls.add_child(cancel_rally_button)
 
 	building_panel = PanelContainer.new()
 	building_panel.anchor_left = 1.0
@@ -147,6 +153,11 @@ func set_selection_state(selected_count: int, total_count: int, all_selected: bo
 
 func set_placement_mode(active: bool) -> void:
 	cancel_build_button.visible = active
+
+func set_rally_mode(active: bool, rally_exists: bool) -> void:
+	rally_button.text = "اختر موقع التجمع" if active else ("نقل نقطة التجمع" if rally_exists else "نقطة التجمع")
+	cancel_rally_button.visible = active or rally_exists
+	cancel_rally_button.text = "إلغاء التحديد" if active else "إلغاء التجمع"
 
 func show_building(data: Dictionary) -> void:
 	building_data = data.duplicate(true)
