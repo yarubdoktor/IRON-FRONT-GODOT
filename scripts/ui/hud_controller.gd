@@ -51,7 +51,7 @@ func _build_interface() -> void:
 	var controls := HBoxContainer.new()
 	controls.anchor_left = 1.0
 	controls.anchor_right = 1.0
-	controls.offset_left = -590.0
+	controls.offset_left = -670.0
 	controls.offset_right = -10.0
 	controls.offset_top = 9.0
 	controls.offset_bottom = 57.0
