@@ -26,6 +26,19 @@ var placed_buildings: Array[Dictionary] = []
 var placed_nodes: Array[Node3D] = []
 var current_position := Vector3.ZERO
 var current_valid := false
+var current_rotation_degrees := 0.0
+
+func rotate_placement() -> void:
+	if active_type.is_empty():
+		return
+	current_rotation_degrees = fposmod(current_rotation_degrees + 90.0, 360.0)
+	preview.rotation_degrees.y = current_rotation_degrees
+	var footprint_size: Vector2 = _current_footprint_size()
+	current_valid = _is_valid_position(Vector2(current_position.x, current_position.z), footprint_size)
+	_set_preview_valid(current_valid)
+
+func _current_footprint_size() -> Vector2:
+	return Vector2(BUILDING_SIZE.y, BUILDING_SIZE.x) if int(current_rotation_degrees) % 180 != 0 else BUILDING_SIZE
 
 func configure(camera_node: Camera3D, economy_node: EconomyManager, initial_footprints: Array[Dictionary]) -> void:
 	camera = camera_node
@@ -115,6 +128,8 @@ func begin_placement(building_type: String) -> bool:
 	if not can_build(building_type):
 		return false
 	active_type = building_type
+	current_rotation_degrees = 0.0
+	preview.rotation_degrees.y = 0.0
 	preview.visible = true
 	_set_preview_valid(false)
 	return true
@@ -133,7 +148,7 @@ func update_preview(screen_position: Vector2) -> void:
 	var slot_position: Variant = _find_nearest_build_slot(Vector2(world_position.x, world_position.z))
 	if slot_position is Vector2:
 		current_position = Vector3(slot_position.x, 0.0, slot_position.y)
-		current_valid = _is_valid_position(slot_position, BUILDING_SIZE)
+		current_valid = _is_valid_position(slot_position, _current_footprint_size())
 	else:
 		current_position = _snap_position(world_position)
 		current_valid = false
@@ -167,7 +182,7 @@ func confirm_placement(screen_position: Vector2) -> String:
 	if not economy.pay_building_cost():
 		return "تعذر خصم تكلفة البناء."
 	var position := Vector2(current_position.x, current_position.z)
-	_create_building(active_type, position)
+	_create_building(active_type, position, current_rotation_degrees)
 	cancel_placement()
 	return "تم إنشاء المبنى في ساحة البناء بنجاح."
 
@@ -197,10 +212,11 @@ func _is_valid_position(center: Vector2, size: Vector2) -> bool:
 func _set_preview_valid(is_valid: bool) -> void:
 	preview_material.albedo_color = Color(0.18, 0.92, 0.34, 0.48) if is_valid else Color(0.95, 0.18, 0.12, 0.48)
 
-func _create_building(building_type: String, center: Vector2) -> void:
+func _create_building(building_type: String, center: Vector2, rotation_degrees: float = 0.0) -> void:
 	var node := Node3D.new()
 	node.name = "Placed_" + building_type + "_" + str(placed_buildings.size() + 1)
 	node.position = Vector3(center.x, 0.0, center.y)
+	node.rotation_degrees.y = rotation_degrees
 
 	var base := MeshInstance3D.new()
 	var base_mesh := BoxMesh.new()
@@ -252,9 +268,10 @@ func _create_building(building_type: String, center: Vector2) -> void:
 
 	add_child(node)
 	placed_nodes.append(node)
-	var record := {"type": building_type, "center": center}
+	var record := {"type": building_type, "center": center, "rotation": rotation_degrees}
 	placed_buildings.append(record)
-	occupied.append({"center": center, "size": BUILDING_SIZE, "label": building_type})
+	var actual_size: Vector2 = Vector2(BUILDING_SIZE.y, BUILDING_SIZE.x) if int(rotation_degrees) % 180 != 0 else BUILDING_SIZE
+	occupied.append({"center": center, "size": actual_size, "label": building_type})
 
 func get_save_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -276,8 +293,9 @@ func load_save_data(data: Array) -> void:
 			var center_value: Variant = record.get("center", Vector2.ZERO)
 			if center_value is Vector2:
 				var kind: String = str(record.get("type", "barracks"))
+				var rotation_value: float = float(record.get("rotation", 0.0))
 				var maximum: int = int(MAX_BUILDINGS_PER_TYPE.get(kind, 1))
 				var restored: int = int(restored_counts.get(kind, 0))
 				if restored < maximum:
-					_create_building(kind, center_value)
+					_create_building(kind, center_value, rotation_value)
 					restored_counts[kind] = restored + 1
