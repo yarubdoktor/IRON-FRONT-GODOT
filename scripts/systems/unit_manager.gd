@@ -20,7 +20,7 @@ var rally_marker: Node3D
 
 func _ready() -> void:
 	for index in range(5):
-		_create_unit(Vector3(-48.0 + float(index % 3) * 3.0, 0.0, 8.0 + float(index / 3) * 3.0), false)
+		_create_unit(Vector3(-48.0 + float(index % 3) * 3.0, 0.0, 8.0 + float(floori(float(index) / 3.0)) * 3.0), false)
 
 func _create_unit(world_position: Vector3, vehicle: bool) -> void:
 	var unit := Node3D.new()
@@ -144,7 +144,7 @@ func _dispatch_reinforcement_to_rally(unit: Node3D) -> void:
 	rally_sequence += 1
 	var index: int = rally_sequence - 1
 	var col: int = index % 5
-	var row: int = int(index / 5)
+	var row: int = floori(float(index) / 5.0)
 	var offset := Vector3(float(col - 2) * 2.4, 0.0, float(row) * 2.4)
 	var target := Vector3(
 		clampf(rally_position.x + offset.x, PLAYER_MIN_X, PLAYER_MAX_X),
@@ -187,10 +187,10 @@ func _set_unit_selected(unit: Node3D, is_selected: bool) -> void:
 		selected_units.erase(unit)
 	_set_marker_visible(unit, is_selected)
 
-func _set_marker_visible(unit: Node3D, is_visible: bool) -> void:
+func _set_marker_visible(unit: Node3D, marker_visible: bool) -> void:
 	var marker_value: Variant = unit.get_meta("selection_marker", null)
 	if marker_value is MeshInstance3D:
-		marker_value.visible = is_visible
+		marker_value.visible = marker_visible
 
 func move_selected_to(destination: Vector3) -> void:
 	if selected_units.is_empty():
@@ -204,7 +204,7 @@ func move_selected_to(destination: Vector3) -> void:
 		var unit: Node3D = moving_units[index]
 		if not is_instance_valid(unit):
 			continue
-		var row: int = int(index / 3)
+		var row: int = floori(float(index) / 3.0)
 		var col: int = index % 3
 		var offset := Vector3(float(col - 1) * 2.2, 0.0, float(row) * 2.2)
 		var raw_target: Vector3 = destination + offset
