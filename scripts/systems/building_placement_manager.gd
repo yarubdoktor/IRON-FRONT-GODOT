@@ -196,6 +196,8 @@ func update_preview(screen_position: Vector2) -> void:
 	var slot_position: Variant = _find_nearest_build_slot(Vector2(world_position.x,world_position.z),pool)
 	if slot_position is Vector2:
 		current_position = Vector3(slot_position.x,0.0,slot_position.y)
+		if active_type == "wall":
+			preview.rotation_degrees.y = _wall_rotation(slot_position)
 		var spec: Dictionary = BUILDING_CATALOG[active_type]
 		var size: Vector2 = spec.get("size",Vector2(3.8,3.2))
 		if int(current_rotation_degrees) % 180 != 0:
@@ -221,12 +223,16 @@ func _first_free_slot(pool: Array[Vector2]) -> Variant:
 	for slot in pool:
 		var used := false
 		for record in placed_buildings:
-			if Vector2(record.get("center",Vector2.ZERO)).distance_to(slot) < 0.25:
+			var saved_center: Variant = record.get("center",Vector2.ZERO)
+			if saved_center is Vector2 and saved_center.distance_to(slot) < 0.25:
 				used = true
 				break
 		if not used:
 			return slot
 	return null
+
+func _wall_rotation(center: Vector2) -> float:
+	return 90.0 if absf(center.x + 67.0) < 0.2 or absf(center.x + 44.0) < 0.2 else 0.0
 
 func _is_slot_available(center: Vector2,size: Vector2) -> bool:
 	if center.x-size.x*0.5 < PLAYER_MIN_X or center.x+size.x*0.5 > PLAYER_MAX_X:
@@ -254,7 +260,10 @@ func confirm_placement(screen_position: Vector2) -> String:
 	if not economy.pay_building_cost(active_type):
 		return "تعذر خصم تكلفة البناء."
 	var position := Vector2(current_position.x,current_position.z)
-	_create_building(active_type,position,current_rotation_degrees)
+	var final_rotation: float = current_rotation_degrees
+	if active_type == "wall":
+		final_rotation = _wall_rotation(position)
+	_create_building(active_type,position,final_rotation)
 	var title: String = str(BUILDING_CATALOG[active_type].get("title",active_type))
 	cancel_placement()
 	return "بدأ إنشاء %s بنجاح." % title
