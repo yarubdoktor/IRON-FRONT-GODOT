@@ -293,7 +293,7 @@ func _create_click_area(node_name: String, world_position: Vector3, box_size: Ve
 func get_initial_footprints() -> Array[Dictionary]:
 	return [
 		{"center":Vector2(-55.0,0.0),"size":Vector2(23.0,15.0),"label":"مركز القيادة"},
-		{"center":Vector2(55.0,0.0),"size":Vector2(15.0,13.0),"label":"مقر العدو"},
+		{"center":Vector2(55.0,0.0),"size":Vector2(23.0,15.0),"label":"مقر العدو"},
 		{"center":Vector2(34.0,-25.0),"size":Vector2(5.0,5.0),"label":"منجم"},
 		{"center":Vector2(34.0,-9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
 		{"center":Vector2(34.0,9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
