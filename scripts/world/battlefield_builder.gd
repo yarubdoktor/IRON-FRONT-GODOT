@@ -4,6 +4,8 @@ extends Node3D
 const MAP_SIZE := Vector2(160.0, 80.0)
 const BRIDGE_Z_POSITIONS: Array[float] = [-30.0, -15.0, 0.0, 15.0, 30.0]
 
+const RuntimeGLBLoader = preload("res://scripts/world/runtime_glb_loader.gd")
+
 func _ready() -> void:
 	_create_lighting()
 	_create_environment()
@@ -12,6 +14,7 @@ func _ready() -> void:
 	_create_terrain_details()
 	_create_headquarters()
 	_create_resource_sites()
+	_create_imported_asset_preview()
 
 func _create_lighting() -> void:
 	var sun := DirectionalLight3D.new()
@@ -269,3 +272,26 @@ func get_initial_footprints() -> Array[Dictionary]:
 		{"center":Vector2(-34.0,25.0),"size":Vector2(5.0,5.0),"label":"منجم"}
 	]
 
+
+func _create_imported_asset_preview() -> void:
+	# First imported art pass: actual GLB assets decoded from bundled base64 files.
+	# Keep instance counts modest for mobile hardware.
+	_add_imported_model("res://assets/models/tree_pine.glb.b64", Vector3(-73.0, 0.0, -31.0), Vector3(1.4, 1.4, 1.4), "ImportedPine_West")
+	_add_imported_model("res://assets/models/tree_pine.glb.b64", Vector3(-72.0, 0.0, 31.0), Vector3(1.2, 1.2, 1.2), "ImportedPine_WestSouth")
+	_add_imported_model("res://assets/models/tree_pine.glb.b64", Vector3(72.0, 0.0, -31.0), Vector3(1.4, 1.4, 1.4), "ImportedPine_East")
+	_add_imported_model("res://assets/models/tree_pine.glb.b64", Vector3(73.0, 0.0, 31.0), Vector3(1.2, 1.2, 1.2), "ImportedPine_EastSouth")
+	_add_imported_model("res://assets/models/rock_large.glb.b64", Vector3(-18.0, 0.0, -29.0), Vector3(1.6, 1.6, 1.6), "ImportedRock_North")
+	_add_imported_model("res://assets/models/rock_large.glb.b64", Vector3(18.0, 0.0, 29.0), Vector3(1.3, 1.3, 1.3), "ImportedRock_South")
+	_add_imported_model("res://assets/models/building_house.glb.b64", Vector3(-55.0, 0.0, -10.0), Vector3(2.0, 2.0, 2.0), "ImportedBarracksDetail")
+	_add_imported_model("res://assets/models/building_tower.glb.b64", Vector3(-67.0, 0.0, 8.0), Vector3(1.8, 1.8, 1.8), "ImportedWatchtower_West")
+	_add_imported_model("res://assets/models/building_tower.glb.b64", Vector3(-43.0, 0.0, -8.0), Vector3(1.8, 1.8, 1.8), "ImportedWatchtower_East")
+
+func _add_imported_model(asset_path: String, world_position: Vector3, model_scale: Vector3, node_name: String) -> void:
+	var model: Node3D = RuntimeGLBLoader.load_scene(asset_path)
+	if model == null:
+		push_warning("Could not load bundled GLB asset: " + asset_path)
+		return
+	model.name = node_name
+	model.position = world_position
+	model.scale = model_scale
+	add_child(model)
