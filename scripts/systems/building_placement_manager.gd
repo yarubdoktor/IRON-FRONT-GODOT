@@ -288,8 +288,13 @@ func _screen_to_ground(screen_position: Vector2) -> Variant:
 func _set_preview_valid(is_valid: bool) -> void:
 	preview_material.albedo_color = Color(0.18,0.92,0.34,0.48) if is_valid else Color(0.95,0.18,0.12,0.48)
 
-func _create_building(building_type: String,center: Vector2,rotation_degrees: float = 0.0) -> void:
+func _create_building(building_type: String,center: Vector2,rotation_degrees: float = 0.0,building_id: String = "",initial_level: int = 1) -> void:
 	var spec: Dictionary = BUILDING_CATALOG.get(building_type,{})
+	if building_id.is_empty():
+		building_id = "%s_%03d" % [building_type,placed_buildings.size()+1]
+	if economy != null and not economy.building_levels.has(building_id):
+		economy.building_levels[building_id] = clampi(initial_level,1,EconomyManager.MAX_BUILDING_LEVEL)
+	var current_level: int = economy.get_building_level(building_id) if economy != null else clampi(initial_level,1,10)
 	var node := Node3D.new()
 	node.name = "Placed_" + building_type + "_" + str(placed_buildings.size()+1)
 	node.position = Vector3(center.x,0.72,center.y)
@@ -311,7 +316,7 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	area.position.y = 1.4
 	area.collision_layer = 1
 	area.collision_mask = 0
-	area.set_meta("building_data",{"id":building_type,"title":str(spec.get("title","مبنى")),"description":str(spec.get("description","")),"action":building_type,"team":"player"})
+	area.set_meta("building_data",{"id":building_id,"building_type":building_type,"level":current_level,"title":str(spec.get("title","مبنى")),"description":str(spec.get("description","")),"action":building_type,"team":"player"})
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(maxf(size.x,2.0),4.5,maxf(size.y,2.0))
@@ -320,7 +325,7 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	node.add_child(area)
 	add_child(node)
 	placed_nodes.append(node)
-	placed_buildings.append({"type":building_type,"center":center,"rotation":rotation_degrees})
+	placed_buildings.append({"id":building_id,"type":building_type,"center":center,"rotation":rotation_degrees,"level":current_level})
 	var reserved_size: Vector2 = size if int(rotation_degrees) % 180 == 0 else Vector2(size.y,size.x)
 	occupied.append({"center":center,"size":reserved_size,"label":building_type})
 
@@ -417,5 +422,5 @@ func load_save_data(data: Array) -> void:
 		var maximum: int = int(MAX_BUILDINGS_PER_TYPE.get(kind,1))
 		var restored: int = int(restored_counts.get(kind,0))
 		if BUILDING_CATALOG.has(kind) and restored < maximum:
-			_create_building(kind,center_value,float(record.get("rotation",0.0)))
+			_create_building(kind,center_value,float(record.get("rotation",0.0)),str(record.get("id","")),int(record.get("level",1)))
 			restored_counts[kind] = restored + 1
