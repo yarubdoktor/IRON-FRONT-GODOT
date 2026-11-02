@@ -21,6 +21,7 @@ func save_game() -> void:
 	var config := ConfigFile.new()
 	config.set_value("economy","resources",economy.resources)
 	config.set_value("economy","secured_mines",economy.secured_mines)
+	config.set_value("economy","building_levels",economy.building_levels)
 	config.set_value("buildings","placed",building_manager.get_save_data())
 	config.set_value("units","army",unit_manager.get_save_data())
 	config.set_value("rally","active",unit_manager.rally_active)
@@ -43,6 +44,9 @@ func load_game() -> void:
 		economy.secured_mines = secured_mines_value.duplicate(true)
 	else:
 		economy.secured_mines = {}
+	var levels_value: Variant = config.get_value("economy","building_levels",{})
+	if levels_value is Dictionary:
+		economy.set_building_levels(levels_value)
 	var buildings_value: Variant = config.get_value("buildings","placed",[])
 	if buildings_value is Array:
 		building_manager.load_save_data(buildings_value)
