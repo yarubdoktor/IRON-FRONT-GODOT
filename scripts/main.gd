@@ -1,60 +1,90 @@
 extends Node3D
 
-const HEADER_TEXT: String = "IRON-FRONT  |  GODOT 4"
-const STATUS_TEXT: String = "PORT FOUNDATION  •  المرحلة الأولى: الخريطة والكاميرا"
+const MAP_SIZE := Vector2(160.0, 80.0)
+const RIVER_WIDTH := 8.0
+const BRIDGE_Z_POSITIONS: Array[float] = [-30.0, -15.0, 0.0, 15.0, 30.0]
 
 func _ready() -> void:
-	_build_hud()
+	_create_camera()
+	_create_lighting()
+	_create_ground()
+	_create_river_and_bridges()
+	_create_headquarters()
+	_create_resource_markers()
 
-func _build_hud() -> void:
-	var layer: CanvasLayer = CanvasLayer.new()
-	layer.name = "PrototypeHUD"
-	add_child(layer)
 
-	var root: Control = Control.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(root)
+func _create_camera() -> void:
+	var camera := Camera3D.new()
+	camera.name = "BattleCamera"
+	camera.position = Vector3(0.0, 58.0, 62.0)
+	camera.rotation_degrees = Vector3(-43.0, 0.0, 0.0)
+	camera.current = true
+	camera.fov = 48.0
+	add_child(camera)
 
-	var header: PanelContainer = PanelContainer.new()
-	header.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	header.offset_left = 14.0
-	header.offset_top = 14.0
-	header.offset_right = -14.0
-	header.offset_bottom = 92.0
-	root.add_child(header)
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 14)
-	margin.add_theme_constant_override("margin_right", 14)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	header.add_child(margin)
+func _create_lighting() -> void:
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	add_child(sun)
 
-	var column: VBoxContainer = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 2)
-	margin.add_child(column)
 
-	var title: Label = Label.new()
-	title.text = HEADER_TEXT
-	title.add_theme_font_size_override("font_size", 23)
-	title.add_theme_color_override("font_color", Color(0.88, 0.78, 0.53))
-	column.add_child(title)
+func _create_ground() -> void:
+	var ground_mesh := PlaneMesh.new()
+	ground_mesh.size = MAP_SIZE
+	var ground_material := StandardMaterial3D.new()
+	ground_material.albedo_color = Color(0.24, 0.34, 0.22)
+	ground_material.roughness = 1.0
+	var ground := MeshInstance3D.new()
+	ground.name = "BattlefieldGround"
+	ground.mesh = ground_mesh
+	ground.material_override = ground_material
+	ground.position.y = -0.35
+	add_child(ground)
 
-	var resources: Label = Label.new()
-	resources.text = "STEEL  8,000     FUEL  4,000     POWER  2,500     AMMO  3,000"
-	resources.add_theme_font_size_override("font_size", 13)
-	resources.add_theme_color_override("font_color", Color(0.84, 0.88, 0.81))
-	column.add_child(resources)
 
-	var status: Label = Label.new()
-	status.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	status.offset_left = 18.0
-	status.offset_right = -18.0
-	status.offset_top = -58.0
-	status.offset_bottom = -14.0
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	status.text = STATUS_TEXT
-	status.add_theme_font_size_override("font_size", 14)
-	status.add_theme_color_override("font_color", Color(0.93, 0.85, 0.66))
-	root.add_child(status)
+func _create_river_and_bridges() -> void:
+	_add_box("River", Vector3(RIVER_WIDTH, 0.12, MAP_SIZE.y), Vector3(0.0, -0.20, 0.0), Color(0.12, 0.31, 0.43))
+	for index in range(BRIDGE_Z_POSITIONS.size()):
+		var bridge_z: float = BRIDGE_Z_POSITIONS[index]
+		_add_box("Bridge_%02d" % index, Vector3(RIVER_WIDTH + 3.0, 0.35, 4.2), Vector3(0.0, 0.05, bridge_z), Color(0.43, 0.37, 0.27))
+
+
+func _create_headquarters() -> void:
+	_add_box("Player_HQ_Base", Vector3(12.0, 1.0, 10.0), Vector3(-55.0, 0.2, 0.0), Color(0.30, 0.39, 0.28))
+	_add_box("Enemy_HQ_Base", Vector3(12.0, 1.0, 10.0), Vector3(55.0, 0.2, 0.0), Color(0.43, 0.27, 0.23))
+	_add_box("Player_HQ_Marker", Vector3(3.0, 5.0, 3.0), Vector3(-55.0, 3.0, 0.0), Color(0.72, 0.78, 0.54))
+	_add_box("Enemy_HQ_Marker", Vector3(3.0, 5.0, 3.0), Vector3(55.0, 3.0, 0.0), Color(0.78, 0.48, 0.38))
+
+
+func _create_resource_markers() -> void:
+	var mine_positions: Array[Vector3] = [
+		Vector3(-34.0, 0.1, -25.0),
+		Vector3(-34.0, 0.1, -9.0),
+		Vector3(-34.0, 0.1, 9.0),
+		Vector3(-34.0, 0.1, 25.0),
+		Vector3(34.0, 0.1, -25.0),
+		Vector3(34.0, 0.1, -9.0),
+		Vector3(34.0, 0.1, 9.0),
+		Vector3(34.0, 0.1, 25.0)
+	]
+	for index in range(mine_positions.size()):
+		var marker_color := Color(0.72, 0.61, 0.32) if index < 4 else Color(0.62, 0.43, 0.34)
+		_add_box("ResourceSite_%02d" % index, Vector3(3.0, 1.0, 3.0), mine_positions[index], marker_color)
+
+
+func _add_box(node_name: String, box_size: Vector3, world_position: Vector3, color: Color) -> void:
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = box_size
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 0.9
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = node_name
+	mesh_instance.mesh = box_mesh
+	mesh_instance.material_override = material
+	mesh_instance.position = world_position
+	add_child(mesh_instance)

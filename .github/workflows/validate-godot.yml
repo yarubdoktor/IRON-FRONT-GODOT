@@ -1,33 +1,27 @@
-name: Validate IRON-FRONT Godot Project
+name: Validate Clean Godot Project
 
 on:
   push:
-    branches: [godot-port]
-    paths:
-      - "project.godot"
-      - "scenes/**"
-      - "scripts/**"
-      - "assets/**"
-      - ".github/workflows/validate-godot.yml"
-
-permissions:
-  contents: read
+    branches: [godot-rebuild]
+  pull_request:
+    branches: [godot-rebuild]
+  workflow_dispatch:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
         with:
-          ref: godot-port
-      - name: Download Godot 4.2.2
-        run: |
-          curl -L --fail --silent --show-error \
-            https://github.com/godotengine/godot/releases/download/4.2.2-stable/Godot_v4.2.2-stable_linux.x86_64.zip \
-            -o /tmp/godot.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          chmod +x /tmp/godot/Godot_v4.2.2-stable_linux.x86_64
+          version: 4.2.2
+          use-dotnet: false
+
       - name: Import project and parse scripts
-        run: /tmp/godot/Godot_v4.2.2-stable_linux.x86_64 --headless --editor --path . --quit
+        run: godot --headless --editor --path . --quit
+
       - name: Launch main scene headlessly
-        run: /tmp/godot/Godot_v4.2.2-stable_linux.x86_64 --headless --path . --quit-after 3
+        run: godot --headless --path . --quit-after 3

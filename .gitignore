@@ -1,5 +1,6 @@
+# Godot generated files
 .godot/
-.export/
-build/
+.import/
+export.cfg
+export_presets.cfg
 *.tmp
-*.log
