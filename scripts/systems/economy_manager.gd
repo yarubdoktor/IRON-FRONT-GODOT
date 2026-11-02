@@ -6,6 +6,7 @@ signal resources_changed(resources: Dictionary)
 var resources: Dictionary = {"wood":500,"metal":300,"fuel":180,"stone":250}
 var secured_mines: Dictionary = {}
 
+const VALID_RESOURCES: Array[String] = ["wood","metal","fuel","stone"]
 const BUILDING_COSTS: Dictionary = {
 	"barracks":{"wood":120,"metal":75},
 	"power":{"wood":35,"metal":100,"stone":35},
@@ -34,10 +35,17 @@ func perform_building_action(data: Dictionary,unit_manager: Node) -> String:
 	if action == "mine":
 		if str(data.get("team","")) != "player":
 			return "هذا الموقع تحت سيطرة العدو."
+		var mine_id: String = str(data.get("id","")).strip_edges()
+		if mine_id.is_empty():
+			return "تعذر تحديد هوية موقع الموارد."
+		if secured_mines.has(mine_id):
+			return "تم تأمين هذا الموقع وجمع موارده سابقاً."
 		var kind: String = str(data.get("resource","wood"))
+		if not VALID_RESOURCES.has(kind):
+			return "نوع المورد في هذا الموقع غير صالح."
 		var amount: int = 60
 		resources[kind] = int(resources.get(kind,0)) + amount
-		secured_mines[str(data.get("id",""))] = true
+		secured_mines[mine_id] = true
 		resources_changed.emit(resources.duplicate(true))
 		return "تم جمع %d من %s." % [amount,_resource_name(kind)]
 	match action:
@@ -95,7 +103,7 @@ func perform_building_action(data: Dictionary,unit_manager: Node) -> String:
 	return "هذا المبنى لا يملك أمراً متاحاً حالياً."
 
 func _produce_passive_resources() -> void:
-	for kind in ["wood","metal","fuel","stone"]:
+	for kind in VALID_RESOURCES:
 		resources[kind] = int(resources.get(kind,0)) + (3 if kind == "wood" else 2)
 	resources_changed.emit(resources.duplicate(true))
 
