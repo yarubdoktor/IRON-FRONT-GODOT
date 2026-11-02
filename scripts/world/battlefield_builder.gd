@@ -249,9 +249,26 @@ func _create_click_area(node_name: String, world_position: Vector3, box_size: Ve
 	add_child(area)
 
 
+func get_initial_footprints() -> Array[Dictionary]:
+	return [
+		{"center":Vector2(-55.0,0.0),"size":Vector2(15.0,13.0),"label":"مركز القيادة"},
+		{"center":Vector2(-50.0,22.0),"size":Vector2(10.0,9.0),"label":"الثكنة"},
+		{"center":Vector2(-50.0,-22.0),"size":Vector2(10.0,9.0),"label":"مصنع المركبات"},
+		{"center":Vector2(55.0,0.0),"size":Vector2(15.0,13.0),"label":"مقر العدو"},
+		{"center":Vector2(34.0,-25.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(34.0,-9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(34.0,9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(34.0,25.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(-34.0,-25.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(-34.0,-9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(-34.0,9.0),"size":Vector2(5.0,5.0),"label":"منجم"},
+		{"center":Vector2(-34.0,25.0),"size":Vector2(5.0,5.0),"label":"منجم"}
+	]
+
+
 func _create_player_buildings() -> void:
-	_create_functional_building("Player_Barracks", Vector3(-43.0, 0.0, 22.0), Color(0.39, 0.43, 0.34), "الثكنة العسكرية", "تدريب الجنود وإعداد وحدات المشاة.", "barracks")
-	_create_functional_building("Player_VehiclePlant", Vector3(-43.0, 0.0, -22.0), Color(0.40, 0.38, 0.31), "مصنع المركبات", "إنتاج المركبات القتالية والدعم الميداني.", "factory")
+	_create_functional_building("Player_Barracks", Vector3(-50.0, 0.0, 22.0), Color(0.39, 0.43, 0.34), "الثكنة العسكرية", "تدريب الجنود وإعداد وحدات المشاة.", "barracks")
+	_create_functional_building("Player_VehiclePlant", Vector3(-50.0, 0.0, -22.0), Color(0.40, 0.38, 0.31), "مصنع المركبات", "إنتاج المركبات القتالية والدعم الميداني.", "factory")
 
 
 func _create_functional_building(node_name: String, origin: Vector3, team_color: Color, title: String, description: String, action: String) -> void:

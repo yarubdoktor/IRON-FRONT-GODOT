@@ -15,6 +15,7 @@ func _create_unit(world_position: Vector3, vehicle: bool) -> void:
 	next_unit_id += 1
 	unit.position = world_position
 	unit.set_meta("is_player_unit",true)
+	unit.set_meta("is_vehicle",vehicle)
 	var body_mesh := MeshInstance3D.new()
 	if vehicle:
 		var mesh := BoxMesh.new()
@@ -72,3 +73,22 @@ func move_selected_to(destination: Vector3) -> void:
 		var target: Vector3 = destination + offset
 		var tween := create_tween()
 		tween.tween_property(units[index],"position",target,1.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func get_save_data() -> Array[Dictionary]:
+	var data: Array[Dictionary] = []
+	for unit in units:
+		data.append({"position":unit.position,"vehicle":bool(unit.get_meta("is_vehicle",false))})
+	return data
+
+
+func load_save_data(data: Array) -> void:
+	for unit in units:
+		unit.queue_free()
+	units.clear()
+	for item in data:
+		if item is Dictionary:
+			var position_value: Variant = item.get("position",Vector3(-48.0,0.0,8.0))
+			if position_value is Vector3:
+				_create_unit(position_value,bool(item.get("vehicle",false)))
+	selected_all = false

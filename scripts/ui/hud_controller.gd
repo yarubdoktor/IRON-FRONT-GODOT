@@ -3,12 +3,17 @@ extends CanvasLayer
 
 signal select_all_requested
 signal building_action_requested(data: Dictionary)
+signal placement_requested(building_type: String)
+signal save_requested
+signal load_requested
 
 var building_data: Dictionary = {}
 var action_button: Button
 var building_panel: PanelContainer
 var message_label: Label
 var resources_label: Label
+var build_barracks_button: Button
+var build_factory_button: Button
 
 func _ready() -> void:
 	_build_interface()
@@ -40,6 +45,18 @@ func _build_interface() -> void:
 	select_button.offset_bottom = 52.0
 	select_button.pressed.connect(func(): select_all_requested.emit())
 	top.add_child(select_button)
+	var save_button := Button.new()
+	save_button.text = "حفظ"
+	save_button.position = Vector2(690.0,12.0)
+	save_button.size = Vector2(76.0,40.0)
+	save_button.pressed.connect(func(): save_requested.emit())
+	top.add_child(save_button)
+	var load_button := Button.new()
+	load_button.text = "تحميل"
+	load_button.position = Vector2(774.0,12.0)
+	load_button.size = Vector2(76.0,40.0)
+	load_button.pressed.connect(func(): load_requested.emit())
+	top.add_child(load_button)
 	building_panel = PanelContainer.new()
 	building_panel.anchor_left = 1.0
 	building_panel.anchor_top = 0.0
@@ -67,6 +84,14 @@ func _build_interface() -> void:
 	description_label.name = "BuildingDescription"
 	description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(description_label)
+	build_barracks_button = Button.new()
+	build_barracks_button.text = "بدء بناء ثكنة"
+	build_barracks_button.pressed.connect(func(): placement_requested.emit("barracks"))
+	content.add_child(build_barracks_button)
+	build_factory_button = Button.new()
+	build_factory_button.text = "بدء بناء مصنع مركبات"
+	build_factory_button.pressed.connect(func(): placement_requested.emit("factory"))
+	content.add_child(build_factory_button)
 	action_button = Button.new()
 	action_button.text = "تنفيذ"
 	action_button.pressed.connect(_on_action_pressed)
@@ -87,6 +112,8 @@ func show_building(data: Dictionary) -> void:
 	(content.get_node("BuildingTitle") as Label).text = str(data.get("title","مبنى"))
 	(content.get_node("BuildingDescription") as Label).text = str(data.get("description",""))
 	var action: String = str(data.get("action",""))
+	build_barracks_button.visible = action == "hq" and str(data.get("team","")) == "player"
+	build_factory_button.visible = build_barracks_button.visible
 	match action:
 		"mine": action_button.text = "تأمين الموقع وجمع الموارد"
 		"barracks": action_button.text = "تدريب جندي  |  80 خشب + 35 معدن"

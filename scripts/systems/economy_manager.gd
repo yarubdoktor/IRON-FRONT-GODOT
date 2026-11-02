@@ -47,6 +47,17 @@ func _produce_passive_resources() -> void:
 		resources[kind] = int(resources.get(kind,0)) + (3 if kind == "wood" else 2)
 	resources_changed.emit(resources.duplicate(true))
 
+func can_afford_building() -> bool:
+	return _can_afford({"wood":120,"metal":75})
+
+
+func pay_building_cost() -> bool:
+	if not can_afford_building():
+		return false
+	_spend({"wood":120,"metal":75})
+	return true
+
+
 func _can_afford(cost: Dictionary) -> bool:
 	for key in cost:
 		if int(resources.get(key,0)) < int(cost[key]):

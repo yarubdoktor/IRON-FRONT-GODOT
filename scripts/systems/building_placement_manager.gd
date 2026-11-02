@@ -1,0 +1,173 @@
+class_name BuildingPlacementManager
+extends Node3D
+
+const GRID_SIZE: float = 2.0
+const SAFETY_GAP: float = 3.0
+const BUILDING_SIZE := Vector2(10.0,9.0)
+const PLAYER_MIN_X: float = -76.0
+const PLAYER_MAX_X: float = -15.0
+const MAP_MIN_Z: float = -37.0
+const MAP_MAX_Z: float = 37.0
+
+var camera: Camera3D
+var economy: EconomyManager
+var active_type := ""
+var preview: MeshInstance3D
+var preview_material: StandardMaterial3D
+var occupied: Array[Dictionary] = []
+var placed_buildings: Array[Dictionary] = []
+var placed_nodes: Array[Node3D] = []
+var current_position := Vector3.ZERO
+var current_valid := false
+
+func configure(camera_node: Camera3D, economy_node: EconomyManager, initial_footprints: Array[Dictionary]) -> void:
+	camera = camera_node
+	economy = economy_node
+	for footprint in initial_footprints:
+		occupied.append(footprint.duplicate(true))
+
+func _ready() -> void:
+	_create_preview()
+
+func _create_preview() -> void:
+	preview = MeshInstance3D.new()
+	preview.name = "BuildingPlacementPreview"
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(BUILDING_SIZE.x,3.8,BUILDING_SIZE.y)
+	preview.mesh = mesh
+	preview.position.y = 1.9
+	preview_material = StandardMaterial3D.new()
+	preview_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	preview_material.albedo_color = Color(0.2,0.9,0.35,0.48)
+	preview_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	preview.material_override = preview_material
+	preview.visible = false
+	add_child(preview)
+
+func begin_placement(building_type: String) -> void:
+	active_type = building_type
+	preview.visible = true
+	_set_preview_valid(false)
+
+func cancel_placement() -> void:
+	active_type = ""
+	preview.visible = false
+
+func update_preview(screen_position: Vector2) -> void:
+	if active_type.is_empty():
+		return
+	var world_position: Variant = _screen_to_ground(screen_position)
+	if not world_position is Vector3:
+		return
+	current_position = _snap_position(world_position)
+	current_valid = _is_valid_position(Vector2(current_position.x,current_position.z),BUILDING_SIZE)
+	preview.position = current_position + Vector3(0.0,1.9,0.0)
+	_set_preview_valid(current_valid)
+
+func confirm_placement(screen_position: Vector2) -> String:
+	if active_type.is_empty():
+		return ""
+	update_preview(screen_position)
+	if not current_valid:
+		return "الموقع غير صالح: اقترب من مبنى أو منجم، أو اختر مساحة داخل منطقتك."
+	if not economy.can_afford_building():
+		return "الموارد غير كافية. البناء يحتاج 120 خشباً و75 معدناً."
+	if not economy.pay_building_cost():
+		return "تعذر خصم تكلفة البناء."
+	var position := Vector2(current_position.x,current_position.z)
+	_create_building(active_type,position)
+	cancel_placement()
+	return "تم إنشاء المبنى بنجاح. حافظ على مسافات الأمان بين المنشآت."
+
+func _screen_to_ground(screen_position: Vector2) -> Variant:
+	var ray_origin: Vector3 = camera.project_ray_origin(screen_position)
+	var ray_direction: Vector3 = camera.project_ray_normal(screen_position)
+	return Plane(Vector3.UP,0.0).intersects_ray(ray_origin,ray_direction)
+
+func _snap_position(world_position: Vector3) -> Vector3:
+	return Vector3(roundf(world_position.x / GRID_SIZE) * GRID_SIZE,0.0,roundf(world_position.z / GRID_SIZE) * GRID_SIZE)
+
+func _is_valid_position(center: Vector2, size: Vector2) -> bool:
+	var half := size * 0.5
+	if center.x - half.x < PLAYER_MIN_X or center.x + half.x > PLAYER_MAX_X:
+		return false
+	if center.y - half.y < MAP_MIN_Z or center.y + half.y > MAP_MAX_Z:
+		return false
+	for item in occupied:
+		var other_center: Vector2 = item.get("center",Vector2.ZERO)
+		var other_size: Vector2 = item.get("size",Vector2.ZERO)
+		var min_distance_x: float = half.x + other_size.x * 0.5 + SAFETY_GAP
+		var min_distance_z: float = half.y + other_size.y * 0.5 + SAFETY_GAP
+		if absf(center.x - other_center.x) < min_distance_x and absf(center.y - other_center.y) < min_distance_z:
+			return false
+	return true
+
+func _set_preview_valid(is_valid: bool) -> void:
+	preview_material.albedo_color = Color(0.18,0.92,0.34,0.48) if is_valid else Color(0.95,0.18,0.12,0.48)
+
+func _create_building(building_type: String, center: Vector2) -> void:
+	var node := Node3D.new()
+	node.name = "Placed_" + building_type + "_" + str(placed_buildings.size()+1)
+	node.position = Vector3(center.x,0.0,center.y)
+	var base := MeshInstance3D.new()
+	var base_mesh := BoxMesh.new()
+	base_mesh.size = Vector3(10.0,0.55,9.0)
+	base.mesh = base_mesh
+	base.position.y = 0.28
+	var base_material := StandardMaterial3D.new()
+	base_material.albedo_color = Color(0.27,0.28,0.24)
+	base.material_override = base_material
+	node.add_child(base)
+	var body := MeshInstance3D.new()
+	var body_mesh := BoxMesh.new()
+	body_mesh.size = Vector3(6.0,3.8,5.5)
+	body.mesh = body_mesh
+	body.position.y = 2.35
+	var body_material := StandardMaterial3D.new()
+	body_material.albedo_color = Color(0.38,0.45,0.34) if building_type == "barracks" else Color(0.43,0.39,0.30)
+	body.material_override = body_material
+	node.add_child(body)
+	var roof := MeshInstance3D.new()
+	var roof_mesh := BoxMesh.new()
+	roof_mesh.size = Vector3(6.8,0.55,6.3)
+	roof.mesh = roof_mesh
+	roof.position.y = 4.55
+	var roof_material := StandardMaterial3D.new()
+	roof_material.albedo_color = Color(0.19,0.22,0.18)
+	roof.material_override = roof_material
+	node.add_child(roof)
+	var area := Area3D.new()
+	area.position.y = 2.0
+	area.set_meta("building_data",{"id":building_type,"title":"الثكنة العسكرية" if building_type == "barracks" else "مصنع المركبات","description":"منشأة جديدة قابلة للتشغيل من خلال لوحة المبنى.","action":building_type,"team":"player"})
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(10.0,6.0,9.0)
+	collision.shape = shape
+	area.add_child(collision)
+	node.add_child(area)
+	add_child(node)
+	placed_nodes.append(node)
+	var record := {"type":building_type,"center":center}
+	placed_buildings.append(record)
+	occupied.append({"center":center,"size":BUILDING_SIZE,"label":building_type})
+
+func get_save_data() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for record in placed_buildings:
+		result.append(record.duplicate(true))
+	return result
+
+func load_save_data(data: Array) -> void:
+	for node in placed_nodes:
+		node.queue_free()
+	placed_nodes.clear()
+	placed_buildings.clear()
+	var base_count: int = 12
+	while occupied.size() > base_count:
+		occupied.pop_back()
+	for record in data:
+		if record is Dictionary:
+			var center_value: Variant = record.get("center",Vector2.ZERO)
+			if center_value is Vector2:
+				var kind: String = str(record.get("type","barracks"))
+				_create_building(kind,center_value)
