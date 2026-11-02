@@ -6,6 +6,7 @@ signal clear_selection_requested
 signal building_action_requested(data: Dictionary)
 signal placement_requested(building_type: String)
 signal cancel_placement_requested
+signal rotate_placement_requested
 signal save_requested
 signal load_requested
 signal rally_point_requested
@@ -21,6 +22,7 @@ var build_factory_button: Button
 var select_button: Button
 var clear_selection_button: Button
 var cancel_build_button: Button
+var rotate_build_button: Button
 var rally_button: Button
 var cancel_rally_button: Button
 
@@ -63,6 +65,11 @@ func _build_interface() -> void:
 	cancel_build_button.visible = false
 	cancel_build_button.pressed.connect(func(): cancel_placement_requested.emit())
 	controls.add_child(cancel_build_button)
+
+	rotate_build_button = _make_top_button("تدوير 90°", 100.0)
+	rotate_build_button.visible = false
+	rotate_build_button.pressed.connect(func(): rotate_placement_requested.emit())
+	controls.add_child(rotate_build_button)
 
 	select_button = _make_top_button("تحديد الكل", 128.0)
 	select_button.pressed.connect(func(): select_all_requested.emit())
@@ -153,6 +160,7 @@ func set_selection_state(selected_count: int, total_count: int, all_selected: bo
 
 func set_placement_mode(active: bool) -> void:
 	cancel_build_button.visible = active
+	rotate_build_button.visible = active
 
 func set_rally_mode(active: bool, rally_exists: bool) -> void:
 	rally_button.text = "اختر موقع التجمع" if active else ("نقل نقطة التجمع" if rally_exists else "نقطة التجمع")
