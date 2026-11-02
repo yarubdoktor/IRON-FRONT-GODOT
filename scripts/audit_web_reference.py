@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Create a reproducible inventory of the 0.16 web source before porting."""
+"""Inventory and package the 0.16 web source for a safe Godot port review."""
 from collections import Counter
 from pathlib import Path
+import shutil
 import sys
 
 root = Path(sys.argv[1]).resolve()
@@ -18,11 +19,7 @@ for p in files:
     manifest.append(f"{p.stat().st_size:>10}  {rel}")
 (out / "file-manifest.txt").write_text("\n".join(manifest) + "\n", encoding="utf-8")
 
-key_names = {
-    "package.json", "vite.config.js", "vite.config.ts", "index.html",
-    "tsconfig.json", "README.md", "capacitor.config.ts",
-    "src/main.jsx", "src/main.tsx", "src/App.jsx", "src/App.tsx",
-}
+key_names = {"package.json", "vite.config.js", "vite.config.ts", "index.html", "tsconfig.json", "README.md", "capacitor.config.ts", "src/main.jsx", "src/main.tsx", "src/App.jsx", "src/App.tsx"}
 key_files = []
 for p in files:
     rel = p.relative_to(root).as_posix()
@@ -36,36 +33,27 @@ image_files = [p for p in files if p.suffix.lower() in {".png", ".jpg", ".jpeg",
 audio_files = [p for p in files if p.suffix.lower() in {".wav", ".mp3", ".ogg"}]
 
 report = [
-    "# IRON-FRONT 0.16 — Source Audit",
-    "",
-    "This is an inventory only. It does not modify or convert the source project.",
-    "",
-    f"- Extracted root: {root}",
+    "# IRON-FRONT 0.16 — Source Audit", "",
+    "Inventory only; the original source archive remains unchanged.", "",
     f"- Total files: **{len(files)}**",
     f"- Total unpacked size: **{total_bytes:,} bytes**",
     f"- 3D model files: **{len(model_files)}**",
-    f"- Image/texture files: **{len(image_files)}**",
-    f"- Audio files: **{len(audio_files)}**",
-    "",
-    "## File types",
-    "",
-    "| Extension | Count |",
-    "|---|---:|",
+    f"- Image/texture files by standalone extension: **{len(image_files)}**",
+    f"- Audio files by standalone extension: **{len(audio_files)}**", "",
+    "## File types", "", "| Extension | Count |", "|---|---:|"
 ]
 for ext, count in counts.most_common():
     report.append(f"| {ext} | {count} |")
-
 report += ["", "## Important project files", ""]
-report += [f"- {name}" for name in key_files] or ["- No common web entry files detected at expected paths."]
+report += [f"- {name}" for name in key_files] or ["- No common web entry files detected."]
 report += ["", "## 3D models", ""]
-report += [f"- {p.relative_to(root).as_posix()} ({p.stat().st_size:,} bytes)" for p in model_files[:300]]
-if len(model_files) > 300:
-    report.append(f"- … and {len(model_files) - 300} more model files (see full manifest).")
+report += [f"- {p.relative_to(root).as_posix()} ({p.stat().st_size:,} bytes)" for p in model_files]
 report += ["", "## Asset candidates", ""]
-report += [f"- {p.relative_to(root).as_posix()}" for p in asset_files[:300]]
-if len(asset_files) > 300:
-    report.append(f"- … and {len(asset_files) - 300} more asset files (see full manifest).")
-
+report += [f"- {p.relative_to(root).as_posix()}" for p in asset_files]
 (out / "REPORT.md").write_text("\n".join(report) + "\n", encoding="utf-8")
-print("\n".join(report[:25]))
-print(f"Full manifest written: {out / 'file-manifest.txt'}")
+
+# Keep a complete extracted copy as an artifact so source files can be inspected,
+# not merely inferred from filenames.
+shutil.copytree(root, out / "extracted-source", dirs_exist_ok=True)
+print("\n".join(report[:24]))
+print(f"Packaged {len(files)} source files for detailed review.")
