@@ -96,9 +96,10 @@ func _create_terrain_details() -> void:
 	_add_scatter(rng, 76, -77.0, -13.0, -38.0, 38.0, Color(0.17, 0.27, 0.17))
 	_add_scatter(rng, 76, 13.0, 77.0, -38.0, 38.0, Color(0.19, 0.29, 0.18))
 	for side in [-1.0, 1.0]:
+		var side_value: float = float(side)
 		for index in range(8):
-			var x := side * (17.0 + float(index) * 4.0)
-			_add_box("Road_%s_%02d" % [str(side), index], Vector3(2.4, 0.035, 7.0), Vector3(x, -0.17, 0.0), Color(0.39, 0.35, 0.27))
+			var x: float = side_value * (17.0 + float(index) * 4.0)
+			_add_box("Road_%s_%02d" % [str(side_value), index], Vector3(2.4, 0.035, 7.0), Vector3(x, -0.17, 0.0), Color(0.39, 0.35, 0.27))
 	for index in range(26):
 		var x := rng.randf_range(-76.0, 76.0)
 		var z := rng.randf_range(-37.0, 37.0)
