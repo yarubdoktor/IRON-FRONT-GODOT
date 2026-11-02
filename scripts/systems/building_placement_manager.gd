@@ -75,7 +75,7 @@ func _create_build_slots() -> void:
 		var mesh := BoxMesh.new()
 		mesh.size = Vector3(3.8, 0.12, 3.2)
 		base.mesh = mesh
-		base.position.y = -0.16
+		base.position.y = 0.70
 		var material := StandardMaterial3D.new()
 		material.albedo_color = Color(0.24, 0.29, 0.22, 0.78)
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -84,13 +84,13 @@ func _create_build_slots() -> void:
 		var edge_material := StandardMaterial3D.new()
 		edge_material.albedo_color = Color(0.72, 0.62, 0.34, 0.95)
 		edge_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,-0.07,-1.6), edge_material)
-		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,-0.07,1.6), edge_material)
-		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(-1.9,-0.07,0.0), edge_material)
-		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(1.9,-0.07,0.0), edge_material)
+		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,0.77,-1.6), edge_material)
+		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,0.77,1.6), edge_material)
+		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(-1.9,0.77,0.0), edge_material)
+		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(1.9,0.77,0.0), edge_material)
 		var label := Label3D.new()
 		label.text = "موقع بناء %02d" % (index + 1)
-		label.position = Vector3(0.0,0.08,-2.0)
+		label.position = Vector3(0.0,0.95,-2.0)
 		label.font_size = 22
 		label.modulate = Color(0.88,0.78,0.52,0.9)
 		label.no_depth_test = true
@@ -204,7 +204,7 @@ func update_preview(screen_position: Vector2) -> void:
 	else:
 		current_position = Vector3(world_position.x,0.0,world_position.z)
 		current_valid = false
-	preview.position = current_position + Vector3(0.0,1.25,0.0)
+	preview.position = current_position + Vector3(0.0,1.97,0.0)
 	_set_preview_valid(current_valid)
 
 func _find_nearest_build_slot(world_position: Vector2,pool: Array[Vector2]) -> Variant:
@@ -271,7 +271,7 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	var spec: Dictionary = BUILDING_CATALOG.get(building_type,{})
 	var node := Node3D.new()
 	node.name = "Placed_" + building_type + "_" + str(placed_buildings.size()+1)
-	node.position = Vector3(center.x,0.0,center.y)
+	node.position = Vector3(center.x,0.72,center.y)
 	node.rotation_degrees.y = rotation_degrees
 	var is_wall: bool = building_type == "wall"
 	var pad := MeshInstance3D.new()
