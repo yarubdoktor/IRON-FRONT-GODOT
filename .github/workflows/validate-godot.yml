@@ -26,6 +26,9 @@ jobs:
       - name: Launch main scene headlessly
         run: godot --headless --path . --quit-after 3
 
+      - name: Run economy regression tests
+        run: godot --headless --path . --script res://tests/test_economy_manager.gd
+
   package:
     needs: validate
     runs-on: ubuntu-latest
@@ -36,7 +39,7 @@ jobs:
       - name: Create clean project ZIP
         run: |
           zip -r IRON-FRONT-GODOT-CLEAN-START.zip \
-            project.godot scenes scripts docs README.md .gitignore reference
+            project.godot scenes scripts docs README.md .gitignore reference tests
 
       - name: Upload project ZIP
         uses: actions/upload-artifact@v4
