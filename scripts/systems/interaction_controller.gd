@@ -97,7 +97,10 @@ func _handle_tap(screen_position: Vector2) -> void:
 					hud.show_message("تم تحديد الوحدة. المساحة الفارغة تصدر أمر الحركة.")
 					return
 			if collider.has_meta("building_data"):
-				hud.show_building(collider.get_meta("building_data"))
+				var building_data: Dictionary = collider.get_meta("building_data")
+				if str(building_data.get("action", "")) == "hq" and str(building_data.get("team", "")) == "player":
+					hud.set_building_availability(building_manager.can_build("barracks"), building_manager.can_build("factory"))
+				hud.show_building(building_data)
 				return
 
 	if not unit_manager.selected_units.is_empty():
@@ -138,7 +141,9 @@ func _on_placement_requested(building_type: String) -> void:
 	if not economy.can_afford_building():
 		hud.show_message("تحتاج إلى 120 خشباً و75 معدناً لبدء البناء.")
 		return
-	building_manager.begin_placement(building_type)
+	if not building_manager.begin_placement(building_type):
+		hud.show_message(building_manager.building_limit_message(building_type))
+		return
 	hud.building_panel.visible = false
 	hud.set_placement_mode(true)
 	hud.show_message("اختر إحدى ساحات البناء المحددة. الأخضر صالح والأحمر غير صالح.")
