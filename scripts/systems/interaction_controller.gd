@@ -100,7 +100,7 @@ func _handle_tap(screen_position: Vector2) -> void:
 			if collider.has_meta("building_data"):
 				var building_data: Dictionary = collider.get_meta("building_data")
 				if str(building_data.get("action", "")) == "hq" and str(building_data.get("team", "")) == "player":
-					hud.set_building_availability(building_manager.can_build("barracks"), building_manager.can_build("factory"))
+					hud.set_building_availability(building_manager.get_build_availability())
 				hud.show_building(building_data)
 				return
 
@@ -139,15 +139,15 @@ func _on_building_action(data: Dictionary) -> void:
 	hud.building_panel.visible = false
 
 func _on_placement_requested(building_type: String) -> void:
-	if not economy.can_afford_building():
-		hud.show_message("تحتاج إلى 120 خشباً و75 معدناً لبدء البناء.")
+	if not economy.can_afford_building(building_type):
+		hud.show_message("الموارد غير كافية لبناء هذه المنشأة.")
 		return
 	if not building_manager.begin_placement(building_type):
 		hud.show_message(building_manager.building_limit_message(building_type))
 		return
 	hud.building_panel.visible = false
 	hud.set_placement_mode(true)
-	hud.show_message("اختر إحدى ساحات البناء المحددة. الأخضر صالح والأحمر غير صالح.")
+	hud.show_message("اختر إحدى ساحات البناء الـ15 المحددة. الحواجز الدفاعية تستخدم مواقع محيط القاعدة.")
 
 func _on_rotate_placement() -> void:
 	building_manager.rotate_placement()
