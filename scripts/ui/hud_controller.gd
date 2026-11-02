@@ -64,7 +64,7 @@ func _build_interface() -> void:
 	building_panel.offset_left = -300.0
 	building_panel.offset_right = -18.0
 	building_panel.offset_top = 82.0
-	building_panel.offset_bottom = 260.0
+	building_panel.offset_bottom = 390.0
 	building_panel.visible = false
 	add_child(building_panel)
 	var content := VBoxContainer.new()
