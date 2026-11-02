@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/world/battlefield.gd" id="2_battlefield"]
+[ext_resource type="Script" path="res://scripts/world/camera_controller.gd" id="3_camera"]
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 1
+background_color = Color(0.12, 0.18, 0.16, 1)
+ambient_light_color = Color(0.72, 0.78, 0.7, 1)
+ambient_light_energy = 0.8
+
+[node name="IRON_FRONT" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -32, 0)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 95.0
+
+[node name="Battlefield" type="Node3D" parent="."]
+script = ExtResource("2_battlefield")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("3_camera")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+current = true
+fov = 48.0
+near = 0.1
+far = 420.0
