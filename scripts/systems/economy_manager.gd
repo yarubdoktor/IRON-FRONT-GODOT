@@ -6,6 +6,22 @@ signal resources_changed(resources: Dictionary)
 var resources: Dictionary = {"wood":500,"metal":300,"fuel":180,"stone":250}
 var secured_mines: Dictionary = {}
 
+const BUILDING_COSTS: Dictionary = {
+	"barracks":{"wood":120,"metal":75},
+	"power":{"wood":35,"metal":100,"stone":35},
+	"refinery":{"wood":45,"metal":110,"fuel":30},
+	"factory":{"wood":80,"metal":180,"fuel":80,"stone":35},
+	"research":{"wood":80,"metal":130,"stone":50},
+	"watchtower":{"wood":70,"metal":60},
+	"hospital":{"wood":90,"metal":75,"fuel":20},
+	"ammo":{"wood":35,"metal":110,"fuel":45},
+	"vehicle_factory":{"wood":60,"metal":150,"fuel":60},
+	"airfield":{"wood":90,"metal":200,"fuel":100,"stone":50},
+	"missile":{"wood":50,"metal":170,"fuel":60,"stone":40},
+	"wall":{"wood":45,"metal":30},
+	"command":{"wood":90,"metal":110,"fuel":20}
+}
+
 func _ready() -> void:
 	var timer := Timer.new()
 	timer.wait_time = 8.0
@@ -13,7 +29,7 @@ func _ready() -> void:
 	timer.timeout.connect(_produce_passive_resources)
 	add_child(timer)
 
-func perform_building_action(data: Dictionary, unit_manager: Node) -> String:
+func perform_building_action(data: Dictionary,unit_manager: Node) -> String:
 	var action: String = str(data.get("action",""))
 	if action == "mine":
 		if str(data.get("team","")) != "player":
@@ -23,40 +39,76 @@ func perform_building_action(data: Dictionary, unit_manager: Node) -> String:
 		resources[kind] = int(resources.get(kind,0)) + amount
 		secured_mines[str(data.get("id",""))] = true
 		resources_changed.emit(resources.duplicate(true))
-		return "تم جمع %d من %s." % [amount, _resource_name(kind)]
-	if action == "barracks":
-		var cost := {"wood":80,"metal":35}
-		if not _can_afford(cost):
-			return "الموارد غير كافية لتدريب جندي."
-		_spend(cost)
-		unit_manager.spawn_infantry()
-		return "تم تدريب جندي جديد وإضافته إلى قواتك."
-	if action == "factory":
-		var cost := {"metal":70,"fuel":35}
-		if not _can_afford(cost):
-			return "الموارد غير كافية لإنتاج مركبة."
-		_spend(cost)
-		unit_manager.spawn_vehicle()
-		return "تم إنتاج مركبة دعم جديدة."
-	if action == "hq":
-		return "مركز القيادة: راقب مواردك وقواتك ووسّع سيطرتك على الميدان."
-	return "هذا مبنى تابع للعدو ولا يمكن إصدار أوامر إليه."
+		return "تم جمع %d من %s." % [amount,_resource_name(kind)]
+	match action:
+		"barracks":
+			var infantry_cost := {"wood":80,"metal":35}
+			if not _can_afford(infantry_cost):
+				return "الموارد غير كافية لتدريب جندي."
+			_spend(infantry_cost)
+			unit_manager.spawn_infantry()
+			return "تم تدريب جندي جديد وإضافته إلى قواتك."
+		"factory":
+			var tank_cost := {"metal":100,"fuel":45}
+			if not _can_afford(tank_cost):
+				return "الموارد غير كافية لإنتاج دبابة."
+			_spend(tank_cost)
+			unit_manager.spawn_vehicle()
+			return "تم تجهيز دبابة جديدة من مصنع الدبابات."
+		"vehicle_factory":
+			var vehicle_cost := {"metal":70,"fuel":35}
+			if not _can_afford(vehicle_cost):
+				return "الموارد غير كافية لإنتاج مركبة."
+			_spend(vehicle_cost)
+			unit_manager.spawn_vehicle()
+			return "تم إنتاج مركبة دعم جديدة."
+		"power":
+			resources["stone"] = int(resources.get("stone",0)) + 18
+			resources_changed.emit(resources.duplicate(true))
+			return "محطة الطاقة تعمل. تمت إضافة 18 وحدة إلى مخزون الطاقة التمثيلي."
+		"refinery":
+			resources["fuel"] = int(resources.get("fuel",0)) + 35
+			resources_changed.emit(resources.duplicate(true))
+			return "تمت معالجة 35 وحدة وقود."
+		"ammo":
+			resources["metal"] = int(resources.get("metal",0)) + 25
+			resources_changed.emit(resources.duplicate(true))
+			return "تم تجهيز إمداد الذخيرة وإضافة مواد تشغيلية."
+		"research":
+			return "مركز الأبحاث جاهز. نظام التقنيات المتقدمة سيُربط في مرحلة الأبحاث."
+		"watchtower":
+			return "برج المراقبة جاهز. ربط الرصد والمدى الدفاعي يأتي مع نظام القتال."
+		"hospital":
+			return "المستشفى الميداني جاهز. نظام علاج الوحدات سيُربط مع نظام الصحة."
+		"airfield":
+			return "المطار العسكري جاهز. وحدات الطيران ستُفعّل ضمن مرحلة القوات الجوية."
+		"missile":
+			return "منظومة دفاع الصواريخ جاهزة. تفعيل الاشتباك الجوي مرتبط بنظام القتال."
+		"wall":
+			return "التحصين الدفاعي مثبت. سيُربط الضرر والتدمير مع نظام القتال."
+		"command":
+			resources["stone"] = int(resources.get("stone",0)) + 12
+			resources_changed.emit(resources.duplicate(true))
+			return "مركز القيادة المتقدم يعمل. تمت إضافة 12 وحدة دعم."
+		"hq":
+			return "مركز القيادة: راقب مواردك وقواتك ووسّع منشآت القاعدة."
+	return "هذا المبنى لا يملك أمراً متاحاً حالياً."
 
 func _produce_passive_resources() -> void:
 	for kind in ["wood","metal","fuel","stone"]:
 		resources[kind] = int(resources.get(kind,0)) + (3 if kind == "wood" else 2)
 	resources_changed.emit(resources.duplicate(true))
 
-func can_afford_building() -> bool:
-	return _can_afford({"wood":120,"metal":75})
+func can_afford_building(building_type: String = "barracks") -> bool:
+	var cost: Dictionary = BUILDING_COSTS.get(building_type,{})
+	return not cost.is_empty() and _can_afford(cost)
 
-
-func pay_building_cost() -> bool:
-	if not can_afford_building():
+func pay_building_cost(building_type: String = "barracks") -> bool:
+	var cost: Dictionary = BUILDING_COSTS.get(building_type,{})
+	if cost.is_empty() or not _can_afford(cost):
 		return false
-	_spend({"wood":120,"metal":75})
+	_spend(cost)
 	return true
-
 
 func _can_afford(cost: Dictionary) -> bool:
 	for key in cost:
