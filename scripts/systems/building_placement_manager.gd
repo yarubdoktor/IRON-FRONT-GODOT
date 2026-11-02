@@ -1,7 +1,7 @@
 class_name BuildingPlacementManager
 extends Node3D
 
-const SAFETY_GAP: float = 0.12
+const SAFETY_GAP: float = 0.75
 const PLAYER_MIN_X: float = -78.0
 const PLAYER_MAX_X: float = -10.0
 const MAP_MIN_Z: float = -37.0
@@ -9,19 +9,20 @@ const MAP_MAX_Z: float = 37.0
 
 # The original 0.16 construction grid, translated from HQ (-12, 4)
 # to the current native battlefield HQ (-55, 0).
+# Clear construction grid east and north/south of the HQ footprint.
+# Every slot is separated far enough for the largest standard building.
 const BUILD_SLOTS: Array[Vector2] = [
-	Vector2(-61.0, -4.0), Vector2(-57.0, -4.0), Vector2(-53.0, -4.0), Vector2(-49.0, -4.0),
-	Vector2(-61.0, 1.0), Vector2(-61.0, 4.5), Vector2(-57.0, 4.5), Vector2(-53.0, 4.5),
-	Vector2(-49.0, 4.5), Vector2(-49.0, 0.5), Vector2(-64.0, -4.0), Vector2(-64.0, 0.0),
-	Vector2(-64.0, 4.0), Vector2(-45.0, -4.0), Vector2(-45.0, 4.0)
+	Vector2(-47.0, -17.0), Vector2(-47.0, -11.0), Vector2(-47.0, 11.0), Vector2(-47.0, 17.0),
+	Vector2(-26.0, -17.0), Vector2(-26.0, -11.0), Vector2(-26.0, 11.0), Vector2(-26.0, 17.0),
+	Vector2(-20.0, -17.0), Vector2(-20.0, -11.0), Vector2(-20.0, 11.0), Vector2(-20.0, 17.0),
+	Vector2(-14.0, -17.0), Vector2(-14.0, -11.0), Vector2(-14.0, 11.0), Vector2(-14.0, 17.0)
 ]
+# Defensive wall slots stay along the outer north/south edge, clear of mines.
 const WALL_SLOTS: Array[Vector2] = [
-	Vector2(-65.0, -7.4), Vector2(-62.0, -7.4), Vector2(-59.0, -7.4), Vector2(-56.0, -7.4),
-	Vector2(-53.0, -7.4), Vector2(-50.0, -7.4), Vector2(-47.0, -7.4),
-	Vector2(-65.0, 7.6), Vector2(-62.0, 7.6), Vector2(-59.0, 7.6), Vector2(-56.0, 7.6),
-	Vector2(-53.0, 7.6), Vector2(-50.0, 7.6), Vector2(-47.0, 7.6),
-	Vector2(-67.0, -5.0), Vector2(-67.0, -1.5), Vector2(-67.0, 1.0), Vector2(-67.0, 3.5),
-	Vector2(-67.0, 6.0), Vector2(-44.0, -5.0), Vector2(-44.0, 6.0)
+	Vector2(-47.0, -33.0), Vector2(-41.0, -33.0), Vector2(-35.0, -33.0),
+	Vector2(-29.0, -33.0), Vector2(-23.0, -33.0), Vector2(-17.0, -33.0),
+	Vector2(-47.0, 33.0), Vector2(-41.0, 33.0), Vector2(-35.0, 33.0),
+	Vector2(-29.0, 33.0), Vector2(-23.0, 33.0), Vector2(-17.0, 33.0)
 ]
 const BUILDING_CATALOG: Dictionary = {
 	"barracks": {"title":"الثكنة العسكرية","description":"تدريب المشاة والقناصة والمهندسين.","size":Vector2(3.7,3.2)},
@@ -73,7 +74,7 @@ func _create_build_slots() -> void:
 		add_child(site)
 		var base := MeshInstance3D.new()
 		var mesh := BoxMesh.new()
-		mesh.size = Vector3(3.8, 0.12, 3.2)
+		mesh.size = Vector3(4.5, 0.12, 4.5)
 		base.mesh = mesh
 		base.position.y = 0.70
 		var material := StandardMaterial3D.new()
@@ -84,10 +85,10 @@ func _create_build_slots() -> void:
 		var edge_material := StandardMaterial3D.new()
 		edge_material.albedo_color = Color(0.72, 0.62, 0.34, 0.95)
 		edge_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,0.77,-1.6), edge_material)
-		_add_site_border(site, Vector3(3.8,0.1,0.12), Vector3(0.0,0.77,1.6), edge_material)
-		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(-1.9,0.77,0.0), edge_material)
-		_add_site_border(site, Vector3(0.12,0.1,3.2), Vector3(1.9,0.77,0.0), edge_material)
+		_add_site_border(site, Vector3(4.5,0.1,0.12), Vector3(0.0,0.77,-2.25), edge_material)
+		_add_site_border(site, Vector3(4.5,0.1,0.12), Vector3(0.0,0.77,2.25), edge_material)
+		_add_site_border(site, Vector3(0.12,0.1,4.5), Vector3(-2.25,0.77,0.0), edge_material)
+		_add_site_border(site, Vector3(0.12,0.1,4.5), Vector3(2.25,0.77,0.0), edge_material)
 		var label := Label3D.new()
 		label.text = "موقع بناء %02d" % (index + 1)
 		label.position = Vector3(0.0,0.95,-2.0)
@@ -143,8 +144,8 @@ func can_build(building_type: String) -> bool:
 	if count >= maximum:
 		return false
 	if building_type == "wall":
-		return _first_free_slot(WALL_SLOTS) != null
-	return _first_free_slot(BUILD_SLOTS) != null
+		return _first_free_slot(WALL_SLOTS, building_type) != null
+	return _first_free_slot(BUILD_SLOTS, building_type) != null
 
 func building_limit_message(building_type: String) -> String:
 	if building_type == "watchtower":
@@ -219,15 +220,15 @@ func _find_nearest_build_slot(world_position: Vector2,pool: Array[Vector2]) -> V
 			nearest = slot
 	return nearest if nearest_distance <= 5.5 else null
 
-func _first_free_slot(pool: Array[Vector2]) -> Variant:
+func _first_free_slot(pool: Array[Vector2], building_type: String) -> Variant:
+	var spec: Dictionary = BUILDING_CATALOG.get(building_type,{})
+	var size: Vector2 = spec.get("size",Vector2(3.8,3.2))
 	for slot in pool:
-		var used := false
-		for record in placed_buildings:
-			var saved_center: Variant = record.get("center",Vector2.ZERO)
-			if saved_center is Vector2 and saved_center.distance_to(slot) < 0.25:
-				used = true
-				break
-		if not used:
+		var rotation: float = _wall_rotation(slot) if building_type == "wall" else 0.0
+		var reserved_size: Vector2 = size
+		if int(rotation) % 180 != 0:
+			reserved_size = Vector2(size.y,size.x)
+		if _is_slot_available(slot,reserved_size):
 			return slot
 	return null
 
@@ -239,10 +240,14 @@ func _is_slot_available(center: Vector2,size: Vector2) -> bool:
 		return false
 	if center.y-size.y*0.5 < MAP_MIN_Z or center.y+size.y*0.5 > MAP_MAX_Z:
 		return false
-	for record in placed_buildings:
-		var other_center: Vector2 = record.get("center",Vector2.ZERO)
-		if other_center.distance_to(center) < 0.25:
-			return false
+	# Check full axis-aligned footprints, not just center-point distance.
+	# This includes the HQ, all resource sites, and every previously placed building.
+	for footprint in occupied:
+		var other_center: Vector2 = footprint.get("center",Vector2.ZERO)
+		var other_size: Vector2 = footprint.get("size",Vector2.ZERO)
+		if absf(center.x-other_center.x) < (size.x+other_size.x)*0.5+SAFETY_GAP:
+			if absf(center.y-other_center.y) < (size.y+other_size.y)*0.5+SAFETY_GAP:
+				return false
 	return true
 
 func confirm_placement(screen_position: Vector2) -> String:
@@ -309,7 +314,8 @@ func _create_building(building_type: String,center: Vector2,rotation_degrees: fl
 	add_child(node)
 	placed_nodes.append(node)
 	placed_buildings.append({"type":building_type,"center":center,"rotation":rotation_degrees})
-	occupied.append({"center":center,"size":size,"label":building_type})
+	var reserved_size: Vector2 = size if int(rotation_degrees) % 180 == 0 else Vector2(size.y,size.x)
+	occupied.append({"center":center,"size":reserved_size,"label":building_type})
 
 func _add_placeholder_structure(parent: Node3D, building_type: String, footprint: Vector2) -> void:
 	# Temporary gameplay proxy. Final high-detail GLB assets are added after core systems are complete.
