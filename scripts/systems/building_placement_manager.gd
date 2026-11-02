@@ -22,6 +22,7 @@ var active_type := ""
 var preview: MeshInstance3D
 var preview_material: StandardMaterial3D
 var occupied: Array[Dictionary] = []
+var initial_occupied_count: int = 0
 var placed_buildings: Array[Dictionary] = []
 var placed_nodes: Array[Node3D] = []
 var current_position := Vector3.ZERO
@@ -45,6 +46,7 @@ func configure(camera_node: Camera3D, economy_node: EconomyManager, initial_foot
 	economy = economy_node
 	for footprint in initial_footprints:
 		occupied.append(footprint.duplicate(true))
+	initial_occupied_count = occupied.size()
 
 func _ready() -> void:
 	_create_build_slots()
@@ -284,8 +286,7 @@ func load_save_data(data: Array) -> void:
 		node.queue_free()
 	placed_nodes.clear()
 	placed_buildings.clear()
-	var base_count: int = 12
-	while occupied.size() > base_count:
+	while occupied.size() > initial_occupied_count:
 		occupied.pop_back()
 	var restored_counts: Dictionary = {}
 	for record in data:
