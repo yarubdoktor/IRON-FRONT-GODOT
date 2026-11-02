@@ -22,6 +22,8 @@ func save_game() -> void:
 	config.set_value("economy","resources",economy.resources)
 	config.set_value("buildings","placed",building_manager.get_save_data())
 	config.set_value("units","army",unit_manager.get_save_data())
+	config.set_value("rally","active",unit_manager.rally_active)
+	config.set_value("rally","position",unit_manager.rally_position)
 	var error: Error = config.save(SAVE_PATH)
 	hud.show_message("تم حفظ تقدمك." if error == OK else "تعذر حفظ اللعبة. رمز الخطأ: %d" % error)
 
@@ -41,4 +43,8 @@ func load_game() -> void:
 	var units_value: Variant = config.get_value("units","army",[])
 	if units_value is Array:
 		unit_manager.load_save_data(units_value)
+	if bool(config.get_value("rally","active",false)):
+		var rally_value: Variant = config.get_value("rally","position",Vector3.ZERO)
+		if rally_value is Vector3:
+			unit_manager.set_rally_point(rally_value)
 	hud.show_message("تم تحميل آخر تقدم محفوظ.")
