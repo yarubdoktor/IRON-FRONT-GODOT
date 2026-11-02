@@ -23,6 +23,7 @@ func _ready() -> void:
 	hud.select_all_requested.connect(_on_select_all)
 	hud.clear_selection_requested.connect(_on_clear_selection)
 	hud.building_action_requested.connect(_on_building_action)
+	hud.building_upgrade_requested.connect(_on_building_upgrade_requested)
 	hud.placement_requested.connect(_on_placement_requested)
 	hud.cancel_placement_requested.connect(_on_cancel_placement)
 	hud.rotate_placement_requested.connect(_on_rotate_placement)
@@ -99,8 +100,19 @@ func _handle_tap(screen_position: Vector2) -> void:
 					return
 			if collider.has_meta("building_data"):
 				var building_data: Dictionary = collider.get_meta("building_data")
-				if str(building_data.get("action", "")) == "hq" and str(building_data.get("team", "")) == "player":
+				var action: String = str(building_data.get("action",""))
+				if action == "hq" and str(building_data.get("team","")) == "player":
 					hud.set_building_availability(building_manager.get_build_availability())
+					hud.show_building(building_data)
+					return
+				if action != "mine" and str(building_data.get("team","")) == "player":
+					var building_id: String = str(building_data.get("id",""))
+					var building_type: String = str(building_data.get("building_type",action))
+					var upgrade_cost: Dictionary = economy.get_upgrade_cost(building_type,building_id)
+					var can_upgrade: bool = economy.can_upgrade_building(building_type,building_id)
+					var benefit: String = economy.get_upgrade_benefit(building_type,int(building_data.get("level",1))+1)
+					hud.show_building(building_data,upgrade_cost,can_upgrade,benefit)
+					return
 				hud.show_building(building_data)
 				return
 
@@ -137,6 +149,22 @@ func _on_building_action(data: Dictionary) -> void:
 	var result: String = economy.perform_building_action(data, unit_manager)
 	hud.show_message(result)
 	hud.building_panel.visible = false
+
+func _on_building_upgrade_requested(data: Dictionary) -> void:
+	var building_id: String = str(data.get("id",""))
+	var building_type: String = str(data.get("building_type",data.get("action","")))
+	if not economy.upgrade_building(building_type,building_id):
+		hud.show_message("تعذر الترقية: تحقق من الموارد أو مستوى المبنى.")
+		return
+	var new_level: int = economy.get_building_level(building_id)
+	building_manager.update_building_level(building_id,new_level)
+	var refreshed: Dictionary = data.duplicate(true)
+	refreshed["level"] = new_level
+	var next_cost: Dictionary = economy.get_upgrade_cost(building_type,building_id)
+	var can_upgrade: bool = economy.can_upgrade_building(building_type,building_id)
+	var benefit: String = economy.get_upgrade_benefit(building_type,new_level+1)
+	hud.show_building(refreshed,next_cost,can_upgrade,benefit)
+	hud.show_message("تمت ترقية %s إلى المستوى %d." % [str(data.get("title","المبنى")),new_level])
 
 func _on_placement_requested(building_type: String) -> void:
 	if not economy.can_afford_building(building_type):
