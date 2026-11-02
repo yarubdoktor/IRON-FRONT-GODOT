@@ -1,4 +1,4 @@
-name: Validate Clean Godot Project
+name: Validate and Package Clean Godot Project
 
 on:
   push:
@@ -25,3 +25,22 @@ jobs:
 
       - name: Launch main scene headlessly
         run: godot --headless --path . --quit-after 3
+
+  package:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create clean project ZIP
+        run: |
+          zip -r IRON-FRONT-GODOT-CLEAN-START.zip \
+            project.godot scenes scripts docs README.md .gitignore reference
+
+      - name: Upload project ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: IRON-FRONT-GODOT-CLEAN-START
+          path: IRON-FRONT-GODOT-CLEAN-START.zip
+          retention-days: 30
