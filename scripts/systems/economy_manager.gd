@@ -162,15 +162,11 @@ func set_building_levels(levels: Dictionary) -> void:
 
 func get_upgrade_benefit(building_type: String, next_level: int) -> String:
 	match building_type:
-		"barracks": return "زيادة سرعة تدريب القوات بنسبة 5% لكل مستوى."
-		"factory","vehicle_factory": return "زيادة كفاءة إنتاج المركبات بنسبة 5% لكل مستوى."
-		"power","refinery","ammo": return "زيادة إنتاج الموارد بنسبة 5% لكل مستوى."
-		"research": return "زيادة كفاءة الأبحاث بنسبة 5% لكل مستوى."
-		"hospital": return "زيادة سعة العلاج بنسبة 5% لكل مستوى."
-		"watchtower","missile","wall": return "تحسين القدرة الدفاعية بنسبة 5% لكل مستوى."
-		"airfield": return "زيادة كفاءة الطيران بنسبة 5% لكل مستوى."
-		"command": return "زيادة دعم القاعدة بنسبة 5% لكل مستوى."
-	return "تحسين كفاءة المبنى بنسبة 5% لكل مستوى."
+		"barracks": return "خفض تكلفة تدريب القوات بنسبة 5% لكل مستوى إضافي، حتى 50%."
+		"factory","vehicle_factory": return "خفض تكلفة إنتاج المركبات بنسبة 5% لكل مستوى إضافي، حتى 50%."
+		"power","refinery","ammo","command": return "زيادة إنتاج الموارد بنسبة 5% لكل مستوى إضافي."
+		"research","hospital","watchtower","missile","wall","airfield": return "رفع مستوى المنشأة؛ مزاياها التشغيلية المتخصصة ستُفعّل مع اكتمال نظامها."
+	return "رفع مستوى المبنى وتحسين كفاءته ضمن النظام المتاح حالياً."
 
 func _scaled_training_cost(base_cost: Dictionary, building_id: String) -> Dictionary:
 	var level: int = get_building_level(building_id)
