@@ -4,6 +4,7 @@ extends CanvasLayer
 signal select_all_requested
 signal clear_selection_requested
 signal building_action_requested(data: Dictionary)
+signal building_upgrade_requested(data: Dictionary)
 signal placement_requested(building_type: String)
 signal cancel_placement_requested
 signal rotate_placement_requested
@@ -30,6 +31,7 @@ const BUILD_MENU: Array[Dictionary] = [
 
 var building_data: Dictionary = {}
 var action_button: Button
+var upgrade_button: Button
 var building_panel: PanelContainer
 var message_label: Label
 var resources_label: Label
@@ -165,6 +167,11 @@ func _build_interface() -> void:
 	action_button.pressed.connect(_on_action_pressed)
 	content.add_child(action_button)
 
+	upgrade_button = Button.new()
+	upgrade_button.text = "ترقية المبنى"
+	upgrade_button.pressed.connect(func(): building_upgrade_requested.emit(building_data))
+	content.add_child(upgrade_button)
+
 	message_label = Label.new()
 	message_label.anchor_top = 1.0
 	message_label.anchor_bottom = 1.0
@@ -211,7 +218,7 @@ func set_building_availability(availability: Dictionary) -> void:
 		var base_title: String = str(item.get("title",""))
 		button.text = base_title if available else base_title + "  •  مكتمل / لا توجد ساحة"
 
-func show_building(data: Dictionary) -> void:
+func show_building(data: Dictionary,upgrade_cost: Dictionary = {},can_upgrade: bool = false,upgrade_benefit: String = "") -> void:
 	building_data = data.duplicate(true)
 	var content := building_panel.get_child(0) as VBoxContainer
 	(content.get_node("BuildingTitle") as Label).text = str(data.get("title","مبنى"))
@@ -241,7 +248,22 @@ func show_building(data: Dictionary) -> void:
 		"hq": action_button.text = "معلومات مركز القيادة"
 		_: action_button.text = "غير متاح"
 	action_button.disabled = str(data.get("team","")) != "player" and action != "hq"
+	var is_upgradeable: bool = str(data.get("team","")) == "player" and action != "hq" and action != "mine" and not str(data.get("id","")).is_empty()
+	upgrade_button.visible = is_upgradeable
+	if is_upgradeable:
+		var level: int = int(data.get("level",1))
+		var cost_text := _format_resource_cost(upgrade_cost)
+		upgrade_button.text = "ترقية إلى المستوى %d  |  %s" % [level + 1,cost_text] if not upgrade_cost.is_empty() else "المبنى وصل للمستوى الأقصى"
+		upgrade_button.disabled = not can_upgrade or upgrade_cost.is_empty()
+		(content.get_node("BuildingDescription") as Label).text += "\nالمستوى الحالي: %d / 10\n%s" % [level,upgrade_benefit]
 	building_panel.visible = true
+
+func _format_resource_cost(cost: Dictionary) -> String:
+	var labels := {"wood":"خشب","metal":"معدن","fuel":"وقود","stone":"حجر"}
+	var parts: Array[String] = []
+	for key in cost:
+		parts.append("%s %d" % [str(labels.get(key,key)),int(cost[key])])
+	return " - ".join(parts)
 
 func _on_action_pressed() -> void:
 	building_action_requested.emit(building_data)
