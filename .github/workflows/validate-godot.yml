@@ -36,7 +36,7 @@ jobs:
       - name: Create clean project ZIP
         run: |
           zip -r IRON-FRONT-GODOT-CLEAN-START.zip \
-            project.godot scenes scripts assets docs README.md .gitignore reference
+            project.godot scenes scripts docs README.md .gitignore reference
 
       - name: Upload project ZIP
         uses: actions/upload-artifact@v4
