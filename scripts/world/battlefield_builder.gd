@@ -139,7 +139,8 @@ func _create_fort(origin: Vector3, team_color: Color, prefix: String) -> void:
 	for side_x in [-1.0, 1.0]:
 		for side_z in [-1.0, 1.0]:
 			var tower_pos := origin + Vector3(side_x * 11.5, 2.0, side_z * 7.5)
-			_place_glb("res://assets/3d/base/guard-tower.glb", Vector3(tower_pos.x, 0.0, tower_pos.z), Vector3(2.1, 3.9, 2.1))
+			_add_box(prefix + "_Tower_%s_%s" % [str(side_x), str(side_z)], Vector3(2.1, 4.0, 2.1), tower_pos + Vector3(0.0, 2.0, 0.0), team_color.darkened(0.12))
+			_add_box(prefix + "_TowerCap_%s_%s" % [str(side_x), str(side_z)], Vector3(2.7, 0.45, 2.7), tower_pos + Vector3(0.0, 4.15, 0.0), Color(0.24, 0.22, 0.19))
 	_add_box(prefix + "_Gate", Vector3(3.0, 2.6, 0.45), origin + Vector3(0.0, 1.7, 7.5), Color(0.20, 0.17, 0.14))
 	_add_box(prefix + "_Banner", Vector3(0.18, 3.0, 0.12), origin + Vector3(0.0, 7.8, -2.5), team_color)
 
@@ -216,48 +217,6 @@ func _create_headquarters() -> void:
 	_create_click_area("Enemy_HQ_Click", Vector3(55.0, 2.5, 0.0), Vector3(17.0, 8.0, 15.0), {"id":"enemy_hq","title":"مقر العدو","description":"مركز قيادة القوات المعادية.","action":"enemy","team":"enemy"})
 
 
-
-func _place_glb(resource_path: String, world_position: Vector3, max_size: Vector3) -> void:
-	if not ResourceLoader.exists(resource_path):
-		return
-	var packed: PackedScene = load(resource_path) as PackedScene
-	if packed == null:
-		return
-	var instance: Node3D = packed.instantiate() as Node3D
-	if instance == null:
-		return
-	instance.position = world_position
-	add_child(instance)
-	_fit_glb_to_size(instance,max_size)
-
-func _fit_glb_to_size(instance: Node3D,max_size: Vector3) -> void:
-	var combined := AABB()
-	var has_bounds := false
-	var visuals: Array[Node] = []
-	_collect_glb_visuals(instance,visuals)
-	for visual_node in visuals:
-		var visual := visual_node as VisualInstance3D
-		if visual == null:
-			continue
-		var relative: Transform3D = instance.global_transform.affine_inverse() * visual.global_transform
-		var transformed: AABB = relative * visual.get_aabb()
-		if not has_bounds:
-			combined = transformed
-			has_bounds = true
-		else:
-			combined = combined.merge(transformed)
-	if not has_bounds:
-		return
-	var dimensions: Vector3 = combined.size
-	var fit: float = minf(max_size.x/maxf(dimensions.x,0.001),minf(max_size.y/maxf(dimensions.y,0.001),max_size.z/maxf(dimensions.z,0.001)))
-	instance.scale = Vector3.ONE * fit
-	instance.position += Vector3(-combined.get_center().x*fit,-combined.position.y*fit,-combined.get_center().z*fit)
-
-func _collect_glb_visuals(root: Node,output: Array[Node]) -> void:
-	for child in root.get_children():
-		if child is VisualInstance3D:
-			output.append(child)
-		_collect_glb_visuals(child,output)
 
 func _create_resource_sites() -> void:
 	var mine_positions: Array[Vector3] = [
