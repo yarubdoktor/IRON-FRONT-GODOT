@@ -9,6 +9,7 @@ var building_manager: BuildingPlacementManager
 var persistence: PersistenceManager
 var pointer_start := Vector2.ZERO
 var pointer_is_down := false
+var rally_placement_mode := false
 
 func configure(camera_node: Camera3D, hud_node: HUDController, economy_node: EconomyManager, units_node: UnitManager, building_node: BuildingPlacementManager, persistence_node: PersistenceManager) -> void:
 	camera = camera_node
@@ -26,6 +27,8 @@ func _ready() -> void:
 	hud.cancel_placement_requested.connect(_on_cancel_placement)
 	hud.save_requested.connect(persistence.save_game)
 	hud.load_requested.connect(persistence.load_game)
+	hud.rally_point_requested.connect(_on_rally_point_requested)
+	hud.cancel_rally_requested.connect(_on_cancel_rally_requested)
 	economy.resources_changed.connect(hud.update_resources)
 	hud.update_resources(economy.resources)
 	_update_selection_ui()
@@ -56,6 +59,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_tap(screen_position: Vector2) -> void:
 	if _tap_hits_ui(screen_position):
+		return
+	if rally_placement_mode:
+		var rally_origin: Vector3 = camera.project_ray_origin(screen_position)
+		var rally_direction: Vector3 = camera.project_ray_normal(screen_position)
+		var rally_hit: Variant = Plane(Vector3.UP, 0.0).intersects_ray(rally_origin, rally_direction)
+		if rally_hit is Vector3:
+			unit_manager.set_rally_point(rally_hit)
+			rally_placement_mode = false
+			hud.set_rally_mode(false, true)
+			hud.show_message("تم تحديد نقطة التجمع. التعزيزات الجديدة ستتجه إليها تلقائياً.")
+		else:
+			hud.show_message("تعذر تحديد الموقع. اختر نقطة واضحة على أرض المعركة.")
 		return
 	if not building_manager.active_type.is_empty():
 		var placement_result: String = building_manager.confirm_placement(screen_position)
@@ -132,3 +147,20 @@ func _on_cancel_placement() -> void:
 	building_manager.cancel_placement()
 	hud.set_placement_mode(false)
 	hud.show_message("تم إلغاء وضع البناء.")
+
+func _on_rally_point_requested() -> void:
+	building_manager.cancel_placement()
+	hud.set_placement_mode(false)
+	rally_placement_mode = true
+	hud.set_rally_mode(true, unit_manager.rally_active)
+	hud.show_message("المس أرض المعركة لتحديد نقطة تجمع القوات.")
+
+func _on_cancel_rally_requested() -> void:
+	if rally_placement_mode:
+		rally_placement_mode = false
+		hud.set_rally_mode(false, unit_manager.rally_active)
+		hud.show_message("تم إلغاء تحديد موقع نقطة التجمع.")
+	elif unit_manager.rally_active:
+		unit_manager.cancel_rally_point()
+		hud.set_rally_mode(false, false)
+		hud.show_message("تم إلغاء نقطة التجمع. القوات الموجودة لن تتحرك.")
