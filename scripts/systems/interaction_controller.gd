@@ -20,12 +20,15 @@ func configure(camera_node: Camera3D, hud_node: HUDController, economy_node: Eco
 
 func _ready() -> void:
 	hud.select_all_requested.connect(_on_select_all)
+	hud.clear_selection_requested.connect(_on_clear_selection)
 	hud.building_action_requested.connect(_on_building_action)
 	hud.placement_requested.connect(_on_placement_requested)
+	hud.cancel_placement_requested.connect(_on_cancel_placement)
 	hud.save_requested.connect(persistence.save_game)
 	hud.load_requested.connect(persistence.load_game)
 	economy.resources_changed.connect(hud.update_resources)
 	hud.update_resources(economy.resources)
+	_update_selection_ui()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
@@ -55,24 +58,39 @@ func _handle_tap(screen_position: Vector2) -> void:
 	if _tap_hits_ui(screen_position):
 		return
 	if not building_manager.active_type.is_empty():
-		hud.show_message(building_manager.confirm_placement(screen_position))
+		var placement_result: String = building_manager.confirm_placement(screen_position)
+		hud.show_message(placement_result)
+		if building_manager.active_type.is_empty():
+			hud.set_placement_mode(false)
 		return
+
 	var origin: Vector3 = camera.project_ray_origin(screen_position)
 	var direction: Vector3 = camera.project_ray_normal(screen_position)
-	var query := PhysicsRayQueryParameters3D.create(origin,origin + direction * 250.0)
-	query.collision_mask = 1
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * 250.0)
+	query.collision_mask = 3
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
 	var result: Dictionary = camera.get_world_3d().direct_space_state.intersect_ray(query)
 	if not result.is_empty():
 		var collider: Object = result.get("collider")
-		if collider is Area3D and collider.has_meta("building_data"):
-			hud.show_building(collider.get_meta("building_data"))
-			return
-	if unit_manager.selected_all:
-		var plane := Plane(Vector3.UP,0.0)
-		var hit: Variant = plane.intersects_ray(origin,direction)
+		if collider is Area3D:
+			if collider.has_meta("is_player_unit"):
+				var parent_unit := collider.get_parent() as Node3D
+				if parent_unit != null:
+					unit_manager.select_unit(parent_unit)
+					_update_selection_ui()
+					hud.show_message("تم تحديد الوحدة. المساحة الفارغة تصدر أمر الحركة.")
+					return
+			if collider.has_meta("building_data"):
+				hud.show_building(collider.get_meta("building_data"))
+				return
+
+	if not unit_manager.selected_units.is_empty():
+		var plane := Plane(Vector3.UP, 0.0)
+		var hit: Variant = plane.intersects_ray(origin, direction)
 		if hit is Vector3:
 			unit_manager.move_selected_to(hit)
-			hud.show_message("تم إصدار أمر الحركة لجميع القوات المحددة.")
+			hud.show_message("تم إصدار أمر الحركة للقوات المحددة.")
 
 func _tap_hits_ui(point: Vector2) -> bool:
 	var panel_rect := hud.building_panel.get_global_rect()
@@ -81,11 +99,23 @@ func _tap_hits_ui(point: Vector2) -> bool:
 	return point.y < 66.0 and point.x > 0.0
 
 func _on_select_all() -> void:
-	var count: int = unit_manager.select_all()
-	hud.show_message("تم تحديد %d وحدات. اضغط على الأرض لإصدار أمر الحركة." % count)
+	var count: int = unit_manager.toggle_select_all()
+	if count == 0:
+		hud.show_message("تم إلغاء تحديد جميع القوات.")
+	else:
+		hud.show_message("تم تحديد %d وحدات. اضغط على الزر مرة أخرى لإلغاء التحديد." % count)
+	_update_selection_ui()
+
+func _on_clear_selection() -> void:
+	unit_manager.clear_selection()
+	_update_selection_ui()
+	hud.show_message("تم إلغاء التحديد.")
+
+func _update_selection_ui() -> void:
+	hud.set_selection_state(unit_manager.selected_units.size(), unit_manager.units.size(), unit_manager.selected_all)
 
 func _on_building_action(data: Dictionary) -> void:
-	var result: String = economy.perform_building_action(data,unit_manager)
+	var result: String = economy.perform_building_action(data, unit_manager)
 	hud.show_message(result)
 	hud.building_panel.visible = false
 
@@ -95,4 +125,10 @@ func _on_placement_requested(building_type: String) -> void:
 		return
 	building_manager.begin_placement(building_type)
 	hud.building_panel.visible = false
-	hud.show_message("حرّك المؤشر واختر موقعاً صالحاً. الأخضر صالح والأحمر مرفوض.")
+	hud.set_placement_mode(true)
+	hud.show_message("اختر إحدى ساحات البناء المحددة. الأخضر صالح والأحمر غير صالح.")
+
+func _on_cancel_placement() -> void:
+	building_manager.cancel_placement()
+	hud.set_placement_mode(false)
+	hud.show_message("تم إلغاء وضع البناء.")
