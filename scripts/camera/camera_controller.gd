@@ -1,8 +1,12 @@
 class_name CameraController
 extends Node3D
 
-const CAMERA_MIN_HEIGHT := 28.0
-const CAMERA_MAX_HEIGHT := 92.0
+const CAMERA_MIN_HEIGHT := 36.0
+const CAMERA_MAX_HEIGHT := 76.0
+const CAMERA_MIN_X := -38.0
+const CAMERA_MAX_X := 38.0
+const CAMERA_MIN_Z := 48.0
+const CAMERA_MAX_Z := 84.0
 
 var camera: Camera3D
 var camera_dragging := false
@@ -53,9 +57,10 @@ func _pan_camera(relative: Vector2) -> void:
 	var pan_scale: float = camera.position.y * 0.0015
 	camera.position.x -= relative.x * pan_scale
 	camera.position.z -= relative.y * pan_scale
-	camera.position.x = clampf(camera.position.x, -65.0, 65.0)
-	camera.position.z = clampf(camera.position.z, 20.0, 100.0)
+	camera.position.x = clampf(camera.position.x, CAMERA_MIN_X, CAMERA_MAX_X)
+	camera.position.z = clampf(camera.position.z, CAMERA_MIN_Z, CAMERA_MAX_Z)
 
 func _zoom_camera(amount: float) -> void:
 	camera.position.y = clampf(camera.position.y + amount, CAMERA_MIN_HEIGHT, CAMERA_MAX_HEIGHT)
-	camera.position.z = clampf(camera.position.z + amount * 0.7, 28.0, 110.0)
+	camera.position.z = clampf(camera.position.z + amount * 0.45, CAMERA_MIN_Z, CAMERA_MAX_Z)
+	camera.position.x = clampf(camera.position.x, CAMERA_MIN_X, CAMERA_MAX_X)
