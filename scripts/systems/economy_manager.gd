@@ -2,10 +2,13 @@ class_name EconomyManager
 extends Node
 
 signal resources_changed(resources: Dictionary)
+signal building_level_changed(building_id: String, new_level: int)
 
 var resources: Dictionary = {"wood":500,"metal":300,"fuel":180,"stone":250}
 var secured_mines: Dictionary = {}
+var building_levels: Dictionary = {}
 
+const MAX_BUILDING_LEVEL: int = 10
 const VALID_RESOURCES: Array[String] = ["wood","metal","fuel","stone"]
 const BUILDING_COSTS: Dictionary = {
 	"barracks":{"wood":120,"metal":75},
@@ -117,6 +120,57 @@ func pay_building_cost(building_type: String = "barracks") -> bool:
 		return false
 	_spend(cost)
 	return true
+
+func get_building_level(building_id: String) -> int:
+	return maxi(int(building_levels.get(building_id,1)),1)
+
+func get_upgrade_cost(building_type: String, building_id: String) -> Dictionary:
+	if not BUILDING_COSTS.has(building_type):
+		return {}
+	var current_level: int = get_building_level(building_id)
+	if current_level >= MAX_BUILDING_LEVEL:
+		return {}
+	var base_cost: Dictionary = BUILDING_COSTS[building_type]
+	var cost: Dictionary = {}
+	for resource_name in base_cost:
+		cost[resource_name] = ceili(float(base_cost[resource_name]) * 0.55 * float(current_level))
+	return cost
+
+func can_upgrade_building(building_type: String, building_id: String) -> bool:
+	var cost: Dictionary = get_upgrade_cost(building_type,building_id)
+	return not cost.is_empty() and _can_afford(cost)
+
+func upgrade_building(building_type: String, building_id: String) -> bool:
+	if building_id.strip_edges().is_empty():
+		return false
+	var current_level: int = get_building_level(building_id)
+	if current_level >= MAX_BUILDING_LEVEL:
+		return false
+	var cost: Dictionary = get_upgrade_cost(building_type,building_id)
+	if cost.is_empty() or not _can_afford(cost):
+		return false
+	_spend(cost)
+	building_levels[building_id] = current_level + 1
+	building_level_changed.emit(building_id,current_level + 1)
+	return true
+
+func set_building_levels(levels: Dictionary) -> void:
+	building_levels.clear()
+	for building_id in levels:
+		var level: int = clampi(int(levels[building_id]),1,MAX_BUILDING_LEVEL)
+		building_levels[str(building_id)] = level
+
+func get_upgrade_benefit(building_type: String, next_level: int) -> String:
+	match building_type:
+		"barracks": return "زيادة سرعة تدريب القوات بنسبة 5% لكل مستوى."
+		"factory","vehicle_factory": return "زيادة كفاءة إنتاج المركبات بنسبة 5% لكل مستوى."
+		"power","refinery","ammo": return "زيادة إنتاج الموارد بنسبة 5% لكل مستوى."
+		"research": return "زيادة كفاءة الأبحاث بنسبة 5% لكل مستوى."
+		"hospital": return "زيادة سعة العلاج بنسبة 5% لكل مستوى."
+		"watchtower","missile","wall": return "تحسين القدرة الدفاعية بنسبة 5% لكل مستوى."
+		"airfield": return "زيادة كفاءة الطيران بنسبة 5% لكل مستوى."
+		"command": return "زيادة دعم القاعدة بنسبة 5% لكل مستوى."
+	return "تحسين كفاءة المبنى بنسبة 5% لكل مستوى."
 
 func _can_afford(cost: Dictionary) -> bool:
 	for key in cost:
