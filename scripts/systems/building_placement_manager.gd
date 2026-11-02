@@ -398,6 +398,21 @@ func _add_placeholder_structure(parent: Node3D, building_type: String, footprint
 	roof.material_override = roof_material
 	parent.add_child(roof)
 
+func update_building_level(building_id: String, new_level: int) -> void:
+	for index in range(placed_buildings.size()):
+		var record: Dictionary = placed_buildings[index]
+		if str(record.get("id","")) != building_id:
+			continue
+		record["level"] = clampi(new_level,1,10)
+		placed_buildings[index] = record
+		if index < placed_nodes.size() and is_instance_valid(placed_nodes[index]):
+			var area := placed_nodes[index].get_node_or_null("BuildingClickArea") as Area3D
+			if area != null and area.has_meta("building_data"):
+				var data: Dictionary = area.get_meta("building_data")
+				data["level"] = clampi(new_level,1,10)
+				area.set_meta("building_data",data)
+		return
+
 func get_save_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for record in placed_buildings:
