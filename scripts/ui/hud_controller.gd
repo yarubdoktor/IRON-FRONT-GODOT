@@ -25,48 +25,55 @@ func _ready() -> void:
 
 func _build_interface() -> void:
 	var top := ColorRect.new()
-	top.color = Color(0.055, 0.075, 0.085, 0.92)
+	top.color = Color(0.055, 0.075, 0.085, 0.96)
 	top.anchor_right = 1.0
-	top.offset_bottom = 64.0
+	top.offset_bottom = 68.0
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(top)
 
 	var title := Label.new()
 	title.text = "IRON-FRONT  |  FIELD COMMAND"
-	title.position = Vector2(20, 8)
-	title.add_theme_font_size_override("font_size", 21)
+	title.position = Vector2(18.0, 5.0)
+	title.add_theme_font_size_override("font_size", 19)
 	title.add_theme_color_override("font_color", Color(0.91, 0.86, 0.70))
 	top.add_child(title)
 
 	resources_label = Label.new()
-	resources_label.position = Vector2(20, 37)
-	resources_label.add_theme_font_size_override("font_size", 14)
+	resources_label.position = Vector2(18.0, 36.0)
+	resources_label.add_theme_font_size_override("font_size", 13)
 	resources_label.add_theme_color_override("font_color", Color(0.77, 0.84, 0.77))
 	top.add_child(resources_label)
 
-	save_button_setup(top, "حفظ", Vector2(650.0, 12.0))
-	load_button_setup(top, "تحميل", Vector2(734.0, 12.0))
+	var controls := HBoxContainer.new()
+	controls.anchor_left = 1.0
+	controls.anchor_right = 1.0
+	controls.offset_left = -650.0
+	controls.offset_right = -10.0
+	controls.offset_top = 9.0
+	controls.offset_bottom = 57.0
+	controls.alignment = BoxContainer.ALIGNMENT_END
+	controls.add_theme_constant_override("separation", 6)
+	top.add_child(controls)
 
-	cancel_build_button = Button.new()
-	cancel_build_button.text = "إلغاء البناء"
-	cancel_build_button.position = Vector2(820.0, 12.0)
-	cancel_build_button.size = Vector2(112.0, 40.0)
+	var save_button := _make_top_button("حفظ", 64.0)
+	save_button.pressed.connect(func(): save_requested.emit())
+	controls.add_child(save_button)
+	var load_button := _make_top_button("تحميل", 68.0)
+	load_button.pressed.connect(func(): load_requested.emit())
+	controls.add_child(load_button)
+
+	cancel_build_button = _make_top_button("إلغاء البناء", 108.0)
 	cancel_build_button.visible = false
 	cancel_build_button.pressed.connect(func(): cancel_placement_requested.emit())
-	top.add_child(cancel_build_button)
+	controls.add_child(cancel_build_button)
 
-	select_button = Button.new()
-	select_button.text = "تحديد كل القوات"
-	select_button.position = Vector2(942.0, 12.0)
-	select_button.size = Vector2(150.0, 40.0)
+	select_button = _make_top_button("تحديد الكل", 128.0)
 	select_button.pressed.connect(func(): select_all_requested.emit())
-	top.add_child(select_button)
+	controls.add_child(select_button)
 
-	clear_selection_button = Button.new()
-	clear_selection_button.text = "إلغاء التحديد"
-	clear_selection_button.position = Vector2(1100.0, 12.0)
-	clear_selection_button.size = Vector2(162.0, 40.0)
+	clear_selection_button = _make_top_button("إلغاء التحديد", 112.0)
 	clear_selection_button.pressed.connect(func(): clear_selection_requested.emit())
-	top.add_child(clear_selection_button)
+	controls.add_child(clear_selection_button)
 
 	building_panel = PanelContainer.new()
 	building_panel.anchor_left = 1.0
@@ -120,29 +127,20 @@ func _build_interface() -> void:
 	message_label.anchor_bottom = 1.0
 	message_label.offset_left = 20.0
 	message_label.offset_top = -48.0
-	message_label.offset_right = 600.0
+	message_label.offset_right = 650.0
 	message_label.offset_bottom = -12.0
 	message_label.add_theme_color_override("font_color", Color(0.95, 0.88, 0.65))
 	add_child(message_label)
 
-func save_button_setup(parent: Control, button_text: String, button_position: Vector2) -> void:
+func _make_top_button(button_text: String, button_width: float) -> Button:
 	var button := Button.new()
 	button.text = button_text
-	button.position = button_position
-	button.size = Vector2(76.0, 40.0)
-	button.pressed.connect(func(): save_requested.emit())
-	parent.add_child(button)
-
-func load_button_setup(parent: Control, button_text: String, button_position: Vector2) -> void:
-	var button := Button.new()
-	button.text = button_text
-	button.position = button_position
-	button.size = Vector2(76.0, 40.0)
-	button.pressed.connect(func(): load_requested.emit())
-	parent.add_child(button)
+	button.custom_minimum_size = Vector2(button_width, 40.0)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	return button
 
 func set_selection_state(selected_count: int, total_count: int, all_selected: bool) -> void:
-	select_button.text = "إلغاء تحديد الكل" if all_selected else "تحديد كل القوات"
+	select_button.text = "إلغاء الكل" if all_selected else "تحديد الكل"
 	clear_selection_button.disabled = selected_count == 0
 	if selected_count > 0:
 		show_message("تم تحديد %d من %d وحدات." % [selected_count, total_count])
