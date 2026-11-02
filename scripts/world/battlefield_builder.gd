@@ -82,6 +82,9 @@ func _create_terrain_details() -> void:
 	for index in range(26):
 		var x := rng.randf_range(-76.0, 76.0)
 		var z := rng.randf_range(-37.0, 37.0)
+		# Rocks must not spawn inside the player construction district.
+		if x >= -52.0 and x <= -17.5 and absf(z) <= 23.0:
+			continue
 		if absf(x) < 13.0 or (absf(x) < 25.0 and absf(z) < 8.0):
 			continue
 		_add_rock(Vector3(x, 0.0, z), rng.randf_range(0.45, 1.25), rng)
@@ -114,6 +117,9 @@ func _add_scatter(rng: RandomNumberGenerator, count: int, min_x: float, max_x: f
 	for index in range(count):
 		var x := rng.randf_range(min_x, max_x)
 		var z := rng.randf_range(min_z, max_z)
+		# Keep the complete player construction district free of tree trunks and canopies.
+		if x >= -52.0 and x <= -17.5 and absf(z) <= 23.0:
+			continue
 		if absf(x) < 14.0 or (absf(x) < 25.0 and absf(z) < 9.0):
 			x = max_x if x > 0.0 else min_x
 		var scale := rng.randf_range(0.72, 1.35)
