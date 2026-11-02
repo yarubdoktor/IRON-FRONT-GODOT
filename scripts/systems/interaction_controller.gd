@@ -25,6 +25,7 @@ func _ready() -> void:
 	hud.building_action_requested.connect(_on_building_action)
 	hud.placement_requested.connect(_on_placement_requested)
 	hud.cancel_placement_requested.connect(_on_cancel_placement)
+	hud.rotate_placement_requested.connect(_on_rotate_placement)
 	hud.save_requested.connect(persistence.save_game)
 	hud.load_requested.connect(persistence.load_game)
 	hud.rally_point_requested.connect(_on_rally_point_requested)
@@ -147,6 +148,10 @@ func _on_placement_requested(building_type: String) -> void:
 	hud.building_panel.visible = false
 	hud.set_placement_mode(true)
 	hud.show_message("اختر إحدى ساحات البناء المحددة. الأخضر صالح والأحمر غير صالح.")
+
+func _on_rotate_placement() -> void:
+	building_manager.rotate_placement()
+	hud.show_message("تم تدوير المبنى 90 درجة. تحقق من صلاحية الموقع قبل التثبيت.")
 
 func _on_cancel_placement() -> void:
 	building_manager.cancel_placement()
