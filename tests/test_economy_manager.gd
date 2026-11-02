@@ -54,6 +54,20 @@ func _run_tests() -> void:
 	assert(int(economy.resources["wood"]) == before_payment - 120, "Barracks payment must deduct the exact wood cost.")
 	assert(not economy.pay_building_cost("unknown_building"), "Unknown buildings must not be charged.")
 
+	var upgrade_cost: Dictionary = economy.get_upgrade_cost("barracks","test_barracks_01")
+	assert(not upgrade_cost.is_empty(), "A level-one barracks must have an upgrade cost.")
+	assert(economy.can_upgrade_building("barracks","test_barracks_01"), "Initial resources should cover the first barracks upgrade.")
+	assert(economy.upgrade_building("barracks","test_barracks_01"), "Affordable building upgrade should succeed.")
+	assert(economy.get_building_level("test_barracks_01") == 2, "Successful upgrade must advance the building to level two.")
+	var resources_before_failed_upgrade: Dictionary = economy.resources.duplicate(true)
+	economy.resources = {"wood":0,"metal":0,"fuel":0,"stone":0}
+	assert(not economy.upgrade_building("barracks","test_barracks_01"), "Upgrade must fail when resources are insufficient.")
+	assert(economy.get_building_level("test_barracks_01") == 2, "Failed upgrade must not change the building level.")
+	economy.resources = resources_before_failed_upgrade
+	economy.set_building_levels({"max_level_building":10})
+	assert(economy.get_upgrade_cost("barracks","max_level_building").is_empty(), "Maximum-level buildings must not expose another upgrade.")
+	assert(not economy.upgrade_building("barracks","max_level_building"), "Maximum-level buildings must reject upgrades.")
+
 	var building_manager := BuildingPlacementManagerScript.new()
 	building_manager.configure(null, economy, [])
 	root.add_child(building_manager)
@@ -93,5 +107,5 @@ func _run_tests() -> void:
 	assert(not building_manager.can_build("wall"), "Defensive walls must stop at the configured limit of ten.")
 
 	print("IRON-FRONT regression tests: PASS")
-	print("Verified one-time mine rewards, ownership/resource validation, exact building costs, and building-type limits.")
+	print("Verified mine rewards, building costs, upgrade affordability, level caps, persistence data and building limits.")
 	quit(0)
