@@ -2,10 +2,10 @@ class_name BuildingPlacementManager
 extends Node3D
 
 const SAFETY_GAP: float = 0.75
-const PLAYER_MIN_X: float = -78.0
-const PLAYER_MAX_X: float = -10.0
-const MAP_MIN_Z: float = -37.0
-const MAP_MAX_Z: float = 37.0
+const PLAYER_MIN_X: float = -50.0
+const PLAYER_MAX_X: float = -17.5
+const MAP_MIN_Z: float = -20.0
+const MAP_MAX_Z: float = 20.0
 
 # The original 0.16 construction grid, translated from HQ (-12, 4)
 # to the current native battlefield HQ (-55, 0).
@@ -14,8 +14,7 @@ const MAP_MAX_Z: float = 37.0
 const BUILD_SLOTS: Array[Vector2] = [
 	Vector2(-47.0, -17.0), Vector2(-47.0, -11.0), Vector2(-47.0, 11.0), Vector2(-47.0, 17.0),
 	Vector2(-26.0, -17.0), Vector2(-26.0, -11.0), Vector2(-26.0, 11.0), Vector2(-26.0, 17.0),
-	Vector2(-20.0, -17.0), Vector2(-20.0, -11.0), Vector2(-20.0, 11.0), Vector2(-20.0, 17.0),
-	Vector2(-14.0, -17.0), Vector2(-14.0, -11.0), Vector2(-14.0, 11.0), Vector2(-14.0, 17.0)
+	Vector2(-20.0, -17.0), Vector2(-20.0, -11.0), Vector2(-20.0, 11.0), Vector2(-20.0, 17.0)
 ]
 # Defensive wall slots stay along the outer north/south edge, clear of mines.
 const WALL_SLOTS: Array[Vector2] = [
@@ -236,10 +235,18 @@ func _wall_rotation(center: Vector2) -> float:
 	return 90.0 if absf(center.x + 67.0) < 0.2 or absf(center.x + 44.0) < 0.2 else 0.0
 
 func _is_slot_available(center: Vector2,size: Vector2) -> bool:
-	if center.x-size.x*0.5 < PLAYER_MIN_X or center.x+size.x*0.5 > PLAYER_MAX_X:
-		return false
-	if center.y-size.y*0.5 < MAP_MIN_Z or center.y+size.y*0.5 > MAP_MAX_Z:
-		return false
+	if absf(center.y) <= 25.0:
+		# Standard buildings are restricted to the player construction district.
+		if center.x-size.x*0.5 < PLAYER_MIN_X or center.x+size.x*0.5 > PLAYER_MAX_X:
+			return false
+		if center.y-size.y*0.5 < MAP_MIN_Z or center.y+size.y*0.5 > MAP_MAX_Z:
+			return false
+	else:
+		# Defensive wall lanes remain on the outer perimeter, away from the bridge and enemy HQ.
+		if center.x-size.x*0.5 < -50.0 or center.x+size.x*0.5 > -10.0:
+			return false
+		if center.y-size.y*0.5 < -37.0 or center.y+size.y*0.5 > 37.0:
+			return false
 	# Check full axis-aligned footprints, not just center-point distance.
 	# This includes the HQ, all resource sites, and every previously placed building.
 	for footprint in occupied:
