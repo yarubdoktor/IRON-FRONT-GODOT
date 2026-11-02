@@ -140,6 +140,7 @@ func _build_interface() -> void:
 	content.add_child(description_label)
 
 	var scroll := ScrollContainer.new()
+	scroll.name = "BuildMenuScroll"
 	scroll.custom_minimum_size = Vector2(280.0,420.0)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(scroll)
@@ -225,6 +226,7 @@ func show_building(data: Dictionary,upgrade_cost: Dictionary = {},can_upgrade: b
 	(content.get_node("BuildingDescription") as Label).text = str(data.get("description",""))
 	var action: String = str(data.get("action",""))
 	var is_player_hq: bool = action == "hq" and str(data.get("team","")) == "player"
+	(content.get_node("BuildMenuScroll") as ScrollContainer).visible = is_player_hq
 	for item in BUILD_MENU:
 		var kind: String = str(item.get("type",""))
 		if build_buttons.has(kind):
