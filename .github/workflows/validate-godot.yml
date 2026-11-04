@@ -35,6 +35,9 @@ jobs:
       - name: Run interaction multi-touch regression tests
         run: godot --headless --path . --script res://tests/test_interaction_controller.gd
 
+      - name: Run persistence regression tests
+        run: godot --headless --path . --script res://tests/test_persistence_manager.gd
+
   package:
     needs: validate
     runs-on: ubuntu-latest
