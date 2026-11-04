@@ -92,9 +92,9 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		pointer_is_down = false
 
 func _is_single_touch_tap(touch_index: int, screen_position: Vector2) -> bool:
-	if touch_points.size() != 1 or not touch_points.has(touch_index) or multi_touch_gesture:
+	if touch_points.size() != 1 or not touch_points.has(touch_index) or not touch_starts.has(touch_index) or multi_touch_gesture:
 		return false
-	var start_position: Vector2 = touch_starts.get(touch_index, screen_position)
+	var start_position: Vector2 = touch_starts[touch_index]
 	return start_position.distance_to(screen_position) < 14.0
 
 func _handle_screen_drag(event: InputEventScreenDrag) -> void:
