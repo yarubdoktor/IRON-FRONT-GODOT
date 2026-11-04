@@ -41,7 +41,7 @@ func _create_demo_squads() -> void:
 	_spawn_squad("Red_Tank_01", 1, 1, Vector3(103.0, 0.0, -4.0), 7, Color(0.65, 0.2, 0.16), 1)
 	_spawn_squad("Red_Armored_01", 1, 2, Vector3(91.0, 0.0, -14.0), 10, Color(0.82, 0.34, 0.22), 2)
 
-func _spawn_squad(unit_name: String, team: int, kind: int, position: Vector3, count: int, tint: Color, visual_kind: int) -> void:
+func _spawn_squad(unit_name: String, team: int, kind: int, world_spawn_position: Vector3, count: int, tint: Color, visual_kind: int) -> void:
 	var squad := Node3D.new()
 	squad.name = unit_name
 	squad.set_script(UNIT_SCRIPT)
@@ -49,7 +49,7 @@ func _spawn_squad(unit_name: String, team: int, kind: int, position: Vector3, co
 	squad.set("unit_type", kind)
 	squad.set("squad_size", count)
 	squad.set("move_speed", 4.5 if kind == 0 else 6.0)
-	squad.position = position
+	squad.position = world_spawn_position
 	add_child(squad)
 
 	var body := StaticBody3D.new()
@@ -73,7 +73,7 @@ func _spawn_squad(unit_name: String, team: int, kind: int, position: Vector3, co
 			mesh.height = 1.55
 			soldier.mesh = mesh
 			soldier.material_override = _unit_material(tint.lightened(0.08 if index % 2 == 0 else 0.0))
-			soldier.position = Vector3(float(index % 3) * 0.78 - 0.75, 0.8, float(index / 3) * 0.82 - 0.35)
+			soldier.position = Vector3(float(index % 3) * 0.78 - 0.75, 0.8, (float(index) / 3.0) * 0.82 - 0.35)
 			squad.add_child(soldier)
 	elif visual_kind == 1:
 		var hull := MeshInstance3D.new()
