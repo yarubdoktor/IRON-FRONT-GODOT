@@ -225,7 +225,7 @@ func _on_placement_requested(building_type: String) -> void:
 		return
 	hud.building_panel.visible = false
 	hud.set_placement_mode(true)
-	hud.show_message("اختر إحدى ساحات البناء الـ15 المحددة. الحواجز الدفاعية تستخدم مواقع محيط القاعدة.")
+	hud.show_message("اختر إحدى ساحات البناء المتاحة. الحواجز الدفاعية تستخدم مواقع محيط القاعدة.")
 
 func _on_rotate_placement() -> void:
 	building_manager.rotate_placement()
