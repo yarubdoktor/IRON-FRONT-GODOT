@@ -74,8 +74,12 @@ func _run_tests() -> void:
 	# Do not invoke world picking in this isolated state test; verify the tracked
 	# start point and release distance directly before clearing the gesture.
 	assert(interaction.touch_starts.has(2), "The fresh finger start position must be recorded.")
-	assert(interaction.touch_starts[2].distance_to(fresh_up.position) < 14.0, "A short fresh gesture should meet the tap movement threshold.")
-	interaction._unhandled_input(fresh_up)
+	assert(interaction._is_single_touch_tap(2, fresh_up.position), "A short fresh single-finger gesture should be eligible as a tap.")
+	var moved_up := InputEventScreenTouch.new()
+	moved_up.index = 2
+	moved_up.position = Vector2(330.0, 400.0)
+	moved_up.pressed = false
+	interaction._unhandled_input(moved_up)
 	assert(interaction.touch_points.is_empty(), "A fresh single-finger release must clear touch tracking.")
 
 	print("IRON-FRONT interaction touch tests: PASS")
