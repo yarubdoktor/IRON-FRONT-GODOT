@@ -83,4 +83,6 @@ func _run_tests() -> void:
 	assert(interaction.touch_points.is_empty(), "A fresh single-finger release must clear touch tracking.")
 
 	print("IRON-FRONT interaction touch tests: PASS")
+	building_manager.queue_free()
+	await process_frame
 	quit(0)
