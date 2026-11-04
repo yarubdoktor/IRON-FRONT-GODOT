@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/world/battlefield.gd" id="2_battlefield"]
 [ext_resource type="Script" path="res://scripts/world/camera_controller.gd" id="3_camera"]
+[ext_resource type="Script" path="res://scripts/strategy/battlefield_runtime.gd" id="4_runtime"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 1
@@ -27,6 +28,9 @@ script = ExtResource("2_battlefield")
 
 [node name="CameraRig" type="Node3D" parent="."]
 script = ExtResource("3_camera")
+
+[node name="StrategyRuntime" type="Node3D" parent="Battlefield"]
+script = ExtResource("4_runtime")
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
 current = true
