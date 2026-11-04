@@ -20,6 +20,15 @@ jobs:
           version: 4.2.2
           use-dotnet: false
 
+      - name: Verify project manifest and required folders
+        run: |
+          test -f project.godot
+          test -f scenes/main.tscn
+          test -d scripts
+          test -d assets
+          test -d tests
+          echo "Godot project root verified"
+
       - name: Import project and parse scripts
         run: godot --headless --editor --path . --quit
 
@@ -45,14 +54,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create clean project ZIP
+      - name: Verify packaged Godot project
         run: |
-          zip -r IRON-FRONT-GODOT-CLEAN-START.zip \
-            project.godot scenes scripts docs README.md .gitignore reference tests
+          test -f project.godot
+          test -f scenes/main.tscn
+          test -d scripts
+          test -d assets
+          test -d tests
 
-      - name: Upload project ZIP
+      - name: Upload Godot project files
         uses: actions/upload-artifact@v4
         with:
-          name: IRON-FRONT-GODOT-CLEAN-START
-          path: IRON-FRONT-GODOT-CLEAN-START.zip
+          name: IRON-FRONT-GODOT-PROJECT
+          path: |
+            project.godot
+            scenes/
+            scripts/
+            assets/
+            docs/
+            README.md
+            .gitignore
+            reference/
+            tests/
+          if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
