@@ -108,4 +108,8 @@ func _run_tests() -> void:
 
 	print("IRON-FRONT regression tests: PASS")
 	print("Verified mine rewards, building costs, upgrade affordability, level caps, persistence data and building limits.")
+	building_manager.queue_free()
+	placement_manager.queue_free()
+	economy.queue_free()
+	await process_frame
 	quit(0)
