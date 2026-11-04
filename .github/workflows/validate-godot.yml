@@ -2,7 +2,7 @@ name: Validate and Package Clean Godot Project
 
 on:
   push:
-    branches: [godot-rebuild]
+    branches: [godot-rebuild, iron-ai-studio/audit-camera-touch]
   pull_request:
     branches: [godot-rebuild]
   workflow_dispatch:
@@ -20,6 +20,15 @@ jobs:
           version: 4.2.2
           use-dotnet: false
 
+      - name: Verify project manifest and required folders
+        run: |
+          test -f project.godot
+          test -f scenes/main.tscn
+          test -d scripts
+          test -d assets
+          test -d tests
+          echo "Godot project root verified"
+
       - name: Import project and parse scripts
         run: godot --headless --editor --path . --quit
 
@@ -29,6 +38,15 @@ jobs:
       - name: Run economy regression tests
         run: godot --headless --path . --script res://tests/test_economy_manager.gd
 
+      - name: Run camera touch regression tests
+        run: godot --headless --path . --script res://tests/test_camera_controller.gd
+
+      - name: Run interaction multi-touch regression tests
+        run: godot --headless --path . --script res://tests/test_interaction_controller.gd
+
+      - name: Run persistence regression tests
+        run: godot --headless --path . --script res://tests/test_persistence_manager.gd
+
   package:
     needs: validate
     runs-on: ubuntu-latest
@@ -36,14 +54,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create clean project ZIP
+      - name: Verify packaged Godot project
         run: |
-          zip -r IRON-FRONT-GODOT-CLEAN-START.zip \
-            project.godot scenes scripts docs README.md .gitignore reference tests
+          test -f project.godot
+          test -f scenes/main.tscn
+          test -d scripts
+          test -d assets
+          test -d tests
 
-      - name: Upload project ZIP
+      - name: Upload Godot project files
         uses: actions/upload-artifact@v4
         with:
-          name: IRON-FRONT-GODOT-CLEAN-START
-          path: IRON-FRONT-GODOT-CLEAN-START.zip
+          name: IRON-FRONT-GODOT-PROJECT
+          path: |
+            project.godot
+            scenes/
+            scripts/
+            assets/
+            docs/
+            README.md
+            .gitignore
+            reference/
+            tests/
+          if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
