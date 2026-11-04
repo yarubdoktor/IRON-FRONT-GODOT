@@ -1,7 +1,7 @@
 extends Node3D
 
 const HEADER_TEXT: String = "IRON-FRONT  |  GODOT 4"
-const STATUS_TEXT: String = "PORT FOUNDATION  •  المرحلة الأولى: الخريطة والكاميرا"
+const STATUS_TEXT: String = "اختر فرقة عسكرية ثم اضغط على الأرض لإصدار أمر الحركة  •  العدو يشتبك تلقائياً"
 
 func _ready() -> void:
 	_build_hud()
