@@ -77,11 +77,8 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		_update_build_preview(event.position)
 		return
 
-	var is_single_finger_release: bool = touch_points.size() == 1 and touch_points.has(touch_index) and not multi_touch_gesture
-	if is_single_finger_release:
-		var start_position: Vector2 = touch_starts.get(touch_index, event.position)
-		if start_position.distance_to(event.position) < 14.0:
-			_handle_tap(event.position)
+	if _is_single_touch_tap(touch_index, event.position):
+		_handle_tap(event.position)
 
 	touch_points.erase(touch_index)
 	touch_starts.erase(touch_index)
@@ -93,6 +90,12 @@ func _handle_screen_touch(event: InputEventScreenTouch) -> void:
 		# Keep the gesture marked as multi-touch until every finger is lifted.
 		# This prevents the remaining finger's release from firing a tap.
 		pointer_is_down = false
+
+func _is_single_touch_tap(touch_index: int, screen_position: Vector2) -> bool:
+	if touch_points.size() != 1 or not touch_points.has(touch_index) or multi_touch_gesture:
+		return false
+	var start_position: Vector2 = touch_starts.get(touch_index, screen_position)
+	return start_position.distance_to(screen_position) < 14.0
 
 func _handle_screen_drag(event: InputEventScreenDrag) -> void:
 	var touch_index: int = event.index
