@@ -55,11 +55,12 @@ func _handle_screen_drag(event: InputEventScreenDrag) -> void:
 		return
 	var old_distance: float = _pinch_distance()
 	_touch_positions[event.index] = event.position
-	if _touch_positions.size() >= 2:
+	if _touch_positions.size() == 1:
+		_pan(event.relative * 0.65)
+	elif _touch_positions.size() >= 2:
 		var new_distance: float = _pinch_distance()
 		if old_distance > 0.0 and new_distance > 0.0:
 			_zoom((old_distance - new_distance) * 0.035)
-		_pan(event.relative * 0.65)
 
 func _pinch_distance() -> float:
 	if _touch_positions.size() < 2:
