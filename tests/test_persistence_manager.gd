@@ -55,4 +55,9 @@ func _run_tests() -> void:
 	assert(units.rally_position.distance_to(saved_rally_position) < 0.01, "Loading must restore the rally coordinates.")
 
 	print("IRON-FRONT persistence regression tests: PASS")
+	hud.queue_free()
+	buildings.queue_free()
+	units.queue_free()
+	economy.queue_free()
+	await process_frame
 	quit(0)
