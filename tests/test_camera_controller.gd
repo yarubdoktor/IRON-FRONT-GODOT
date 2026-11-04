@@ -58,4 +58,6 @@ func _run_tests() -> void:
 	assert(controller.touch_points.is_empty(), "Touch tracking must clear after all fingers are released.")
 
 	print("IRON-FRONT camera touch tests: PASS")
+	controller.queue_free()
+	await process_frame
 	quit(0)
