@@ -11,6 +11,15 @@ var pointer_start := Vector2.ZERO
 var pointer_is_down := false
 var rally_placement_mode := false
 
+# Screen touches are tracked independently by finger index. A gesture that
+# involved multiple fingers cannot become a world tap when one finger lifts.
+var touch_points: Dictionary = {}
+var touch_starts: Dictionary = {}
+var active_touch_index: int = -1
+var multi_touch_gesture: bool = false
+var mouse_pointer_start := Vector2.ZERO
+var mouse_pointer_is_down: bool = false
+
 func configure(camera_node: Camera3D, hud_node: HUDController, economy_node: EconomyManager, units_node: UnitManager, building_node: BuildingPlacementManager, persistence_node: PersistenceManager) -> void:
 	camera = camera_node
 	hud = hud_node
@@ -37,27 +46,65 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed:
-			pointer_start = event.position
-			pointer_is_down = true
-			building_manager.update_preview(event.position)
-		elif pointer_is_down:
-			if pointer_start.distance_to(event.position) < 14.0:
-				_handle_tap(event.position)
-			pointer_is_down = false
+		_handle_screen_touch(event)
 	elif event is InputEventScreenDrag:
-		building_manager.update_preview(event.position)
+		_handle_screen_drag(event)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			mouse_pointer_start = event.position
+			mouse_pointer_is_down = true
+			_update_build_preview(event.position)
+		elif mouse_pointer_is_down:
+			if mouse_pointer_start.distance_to(event.position) < 8.0:
+				_handle_tap(event.position)
+			mouse_pointer_is_down = false
+	elif event is InputEventMouseMotion:
+		_update_build_preview(event.position)
+
+func _handle_screen_touch(event: InputEventScreenTouch) -> void:
+	var touch_index: int = event.index
+	if event.pressed:
+		if touch_points.is_empty():
+			multi_touch_gesture = false
+			active_touch_index = touch_index
 			pointer_start = event.position
 			pointer_is_down = true
-			building_manager.update_preview(event.position)
-		elif pointer_is_down:
-			if pointer_start.distance_to(event.position) < 8.0:
-				_handle_tap(event.position)
+		else:
+			multi_touch_gesture = true
 			pointer_is_down = false
-	elif event is InputEventMouseMotion:
-		building_manager.update_preview(event.position)
+		touch_points[touch_index] = event.position
+		touch_starts[touch_index] = event.position
+		_update_build_preview(event.position)
+		return
+
+	var is_single_finger_release: bool = touch_points.size() == 1 and touch_points.has(touch_index) and not multi_touch_gesture
+	if is_single_finger_release:
+		var start_position: Vector2 = touch_starts.get(touch_index, event.position)
+		if start_position.distance_to(event.position) < 14.0:
+			_handle_tap(event.position)
+
+	touch_points.erase(touch_index)
+	touch_starts.erase(touch_index)
+	if touch_points.is_empty():
+		active_touch_index = -1
+		pointer_is_down = false
+		multi_touch_gesture = false
+	elif touch_points.size() == 1:
+		# Keep the gesture marked as multi-touch until every finger is lifted.
+		# This prevents the remaining finger's release from firing a tap.
+		pointer_is_down = false
+
+func _handle_screen_drag(event: InputEventScreenDrag) -> void:
+	var touch_index: int = event.index
+	if not touch_points.has(touch_index):
+		return
+	touch_points[touch_index] = event.position
+	if touch_points.size() == 1 and not multi_touch_gesture and touch_index == active_touch_index:
+		_update_build_preview(event.position)
+
+func _update_build_preview(screen_position: Vector2) -> void:
+	if building_manager != null:
+		building_manager.update_preview(screen_position)
 
 func _handle_tap(screen_position: Vector2) -> void:
 	if _tap_hits_ui(screen_position):
