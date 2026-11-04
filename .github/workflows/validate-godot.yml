@@ -32,6 +32,9 @@ jobs:
       - name: Run camera touch regression tests
         run: godot --headless --path . --script res://tests/test_camera_controller.gd
 
+      - name: Run interaction multi-touch regression tests
+        run: godot --headless --path . --script res://tests/test_interaction_controller.gd
+
   package:
     needs: validate
     runs-on: ubuntu-latest
